@@ -5,22 +5,17 @@
 
 class Transaction {
 public:
-    Transaction(const std::string& sender, const std::string& receiver, 
-               double amount, const std::string& type = "regular");
+    Transaction(const std::string& from, const std::string& to, double amount);
     
-    std::string getSender() const { return sender_; }
-    std::string getReceiver() const { return receiver_; }
-    double getAmount() const { return amount_; }
-    std::string getType() const { return type_; }
+    std::string getFrom() const;
+    std::string getTo() const;
+    double getAmount() const;
+    nlohmann::json toJson() const;
     
 private:
-    std::string sender_;
-    std::string receiver_;
+    std::string from_;
+    std::string to_;
     double amount_;
-    time_t timestamp_;
-    std::string type_;
-    std::string hash_;
-    
-    void calculateHash();
 };
+
 #endif // TRANSACTION_H
