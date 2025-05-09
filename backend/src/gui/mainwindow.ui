@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="chainLengthLabel">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -27,7 +27,7 @@
      <string>PushButton</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="pendingTxsLabel">
     <property name="geometry">
      <rect>
       <x>320</x>
