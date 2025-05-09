@@ -13,7 +13,7 @@ if(WIN32)
 endif()
 
 # Configuração do Qt
-set(QT_PATH "D:/Qt/6.7.0/msvc2022_64")
+set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
 if(NOT EXISTS "${QT_PATH}/lib/cmake/Qt6")
