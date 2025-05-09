@@ -8,6 +8,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(nlohmann_json REQUIRED)
 
+# Após find_package(Qt6...)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
+
 qt6_wrap_ui(UI_HEADERS src/gui/mainwindow.ui)
 
 # Opções para Windows
@@ -21,6 +24,7 @@ target_include_directories(rhodium_node PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gui
+    ${CMAKE_CURRENT_BINARY_DIR}
     ${Qt6_INCLUDE_DIRS}
     ${nlohmann_json_INCLUDE_DIRS}
 )
