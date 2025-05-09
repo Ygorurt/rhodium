@@ -2,6 +2,7 @@
 #define TRANSACTION_H
 
 #include <string>
+#include <nlohmann/json.hpp>  // Adicione esta linha
 
 class Transaction {
 public:
@@ -10,7 +11,7 @@ public:
     std::string getFrom() const;
     std::string getTo() const;
     double getAmount() const;
-    nlohmann::json toJson() const;
+    nlohmann::json toJson() const;  // Corrigido
     
 private:
     std::string from_;
