@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <nlohmann/json.hpp>  // Adicione esta linha
 #include "transaction.h"
 
 class Block {
@@ -12,7 +13,7 @@ public:
     
     std::string getHash() const;
     void incrementNonce();
-    nlohmann::json toJson() const;
+    nlohmann::json toJson() const;  // Corrigido
     
 private:
     int index_;
