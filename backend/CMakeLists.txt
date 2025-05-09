@@ -11,6 +11,7 @@ set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
 # Configuração da biblioteca JSON
 include(FetchContent)
@@ -27,9 +28,13 @@ set(SOURCE_FILES
     src/blockchain/blockchain.h
     src/gui/mainwindow.cpp
     src/gui/mainwindow.h
-    src/gui/mainwindow.ui
+    src/gui/mainwindow.ui  # Adicione esta linha
+    ${UI_HEADERS}
 )
 
+qt6_wrap_ui(UI_HEADERS
+    src/gui/mainwindow.ui
+)
 # Executável principal - DEVE VIR ANTES DOS TARGET_INCLUDE_DIRECTORIES
 add_executable(rhodium_node ${SOURCE_FILES})
 
