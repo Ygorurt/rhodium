@@ -1,27 +1,28 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
-#include "transaction.h"
-#include <vector>
 #include <string>
+#include <vector>
 #include <ctime>
+#include "transaction.h"
 
 class Block {
 public:
-    Block(int index, const std::string& previousHash, 
-          const std::vector<Transaction>& transactions);
+    Block(int index, const std::string& previousHash, const std::vector<Transaction>& transactions);
     
-    std::string getHash() const { return hash_; }
-    void incrementNonce() { nonce_++; }
+    std::string getHash() const;
+    void incrementNonce();
+    nlohmann::json toJson() const;
     
 private:
     int index_;
+    std::time_t timestamp_;
     std::string previousHash_;
     std::vector<Transaction> transactions_;
-    time_t timestamp_;
-    int nonce_;
+    int nonce_ = 0;
     std::string hash_;
     
-    void calculateHash();
+    std::string calculateHash() const;
 };
+
 #endif // BLOCK_H
