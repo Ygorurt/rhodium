@@ -19,7 +19,7 @@ include_directories(
 )
 
 if(WIN32)
-    set(OPENSSL_ROOT_DIR "C:/OpenSSL-Win64")
+    set(OPENSSL_ROOT_DIR "D:/OpenSSL-Win64")
     set(OPENSSL_USE_STATIC_LIBS TRUE)
 endif()
 
