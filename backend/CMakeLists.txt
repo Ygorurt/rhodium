@@ -12,10 +12,10 @@ list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-# Geração dos arquivos UI
+# Geração dos arquivos UI - FORMA CORRIGIDA
+set(UI_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})  # Define explicitamente o diretório de saída
 qt6_wrap_ui(UI_HEADERS 
     src/gui/mainwindow.ui
-    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Arquivos fonte
@@ -34,7 +34,7 @@ add_executable(rhodium_node ${SOURCE_FILES})
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_BINARY_DIR}  # Crucial para arquivos gerados
+    ${CMAKE_CURRENT_BINARY_DIR}  # Para arquivos gerados
     ${Qt6_INCLUDE_DIRS}
 )
 
@@ -45,5 +45,5 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Widgets
 )
 
-# Garante que os arquivos UI são marcados como gerados
+# Marca os arquivos gerados
 set_source_files_properties(${UI_HEADERS} PROPERTIES GENERATED TRUE)
