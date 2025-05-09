@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Configurações para Windows
 if(WIN32)
-    set(OPENSSL_ROOT_DIR "C:/OpenSSL-Win64")
+    set(OPENSSL_ROOT_DIR "D:/OpenSSL-Win64")
     add_definitions(-D_WIN32_WINNT=0x0A00)
 endif()
 
