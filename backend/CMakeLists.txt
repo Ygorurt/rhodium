@@ -10,17 +10,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-# Configuração da biblioteca JSON
-include(FetchContent)
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
+# Geração dos arquivos UI
+qt6_wrap_ui(UI_HEADERS 
+    src/gui/mainwindow.ui
+    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-FetchContent_MakeAvailable(nlohmann_json)
 
 # Arquivos fonte
 set(SOURCE_FILES
@@ -28,21 +24,17 @@ set(SOURCE_FILES
     src/blockchain/blockchain.h
     src/gui/mainwindow.cpp
     src/gui/mainwindow.h
-    src/gui/mainwindow.ui  # Adicione esta linha
+    src/gui/mainwindow.ui
     ${UI_HEADERS}
 )
 
-qt6_wrap_ui(UI_HEADERS
-    src/gui/mainwindow.ui
-)
-# Executável principal - DEVE VIR ANTES DOS TARGET_INCLUDE_DIRECTORIES
+# Executável principal
 add_executable(rhodium_node ${SOURCE_FILES})
 
-# Configuração de includes - DEPOIS DE add_executable
+# Configuração de includes
 target_include_directories(rhodium_node PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${nlohmann_json_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}  # Crucial para arquivos gerados
     ${Qt6_INCLUDE_DIRS}
 )
 
@@ -52,3 +44,6 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Gui
     Qt6::Widgets
 )
+
+# Garante que os arquivos UI são marcados como gerados
+set_source_files_properties(${UI_HEADERS} PROPERTIES GENERATED TRUE)
