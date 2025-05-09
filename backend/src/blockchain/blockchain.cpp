@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
-#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QString>
 
