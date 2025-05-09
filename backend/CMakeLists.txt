@@ -20,7 +20,7 @@ if(NOT EXISTS "${QT_PATH}/lib/cmake/Qt6")
     message(FATAL_ERROR "Qt6 não encontrado em ${QT_PATH}")
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
 # Encontrar dependências
 find_package(OpenSSL REQUIRED)
@@ -43,15 +43,19 @@ include_directories(
     ${Qt6Widgets_INCLUDE_DIRS}
 )
 
-# Arquivos fonte - MELHOR PRÁTICA: listar explicitamente em vez de usar GLOB
+# Modifique a lista de arquivos fonte
 set(SOURCE_FILES
     src/blockchain/blockchain.cpp
     src/blockchain/blockchain.h
     src/gui/mainwindow.cpp
     src/gui/mainwindow.h
-    # Adicione outros arquivos conforme necessário
+    src/gui/mainwindow.ui  # Adicione esta linha
+    ${UI_HEADERS}          # Adicione esta linha
 )
-
+# Adicione antes do add_executable
+qt6_wrap_ui(UI_HEADERS
+    src/gui/mainwindow.ui
+)
 # Executável principal
 add_executable(rhodium_node ${SOURCE_FILES})
 
