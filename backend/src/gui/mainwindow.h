@@ -5,7 +5,7 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QLabel>
-#include "blockchain.h"
+#include "../blockchain/blockchain.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
