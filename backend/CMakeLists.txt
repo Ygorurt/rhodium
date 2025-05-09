@@ -18,6 +18,11 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+if(WIN32)
+    set(OPENSSL_ROOT_DIR "C:/OpenSSL-Win64")
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+endif()
+
 # Encontrar dependências
 find_package(OpenSSL REQUIRED)
 
