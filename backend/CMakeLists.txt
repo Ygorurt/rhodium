@@ -51,8 +51,9 @@ add_executable(rhodium_node ${SOURCE_FILES})
 
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gui
     ${CMAKE_CURRENT_BINARY_DIR}  # Para arquivos gerados como ui_*.h
     ${Qt6Core_INCLUDE_DIRS}
     ${Qt6Gui_INCLUDE_DIRS}
