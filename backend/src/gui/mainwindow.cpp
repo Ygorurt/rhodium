@@ -2,12 +2,18 @@
 #include "ui_mainwindow.h"
 #include <QTimer>
 
-MainWindow::MainWindow(QWidget *parent)
+ainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setupUI();
+    
+    // Corrigido - removido .size() e adicionado cast para int
+    ui->chainLengthLabel->setText(QString("Comprimento da cadeia: %1")
+                                .arg(static_cast<int>(blockchain.getChainLength())));
+    
+    ui->pendingTxsLabel->setText(QString("Transações pendentes: %1")
+                               .arg(static_cast<int>(blockchain.getPendingTransactions())));
     
     updateTimer_ = new QTimer(this);
     connect(updateTimer_, &QTimer::timeout, this, &MainWindow::updateChainStatus);
