@@ -12,6 +12,16 @@ if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
 endif()
 
+# Configuração do Qt
+set(QT_PATH "D:/Qt/6.7.0/msvc2022_64")
+list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
+
+if(NOT EXISTS "${QT_PATH}/lib/cmake/Qt6")
+    message(FATAL_ERROR "Qt6 não encontrado em ${QT_PATH}")
+endif()
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
 # Encontrar dependências
 find_package(OpenSSL REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
