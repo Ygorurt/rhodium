@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(nlohmann_json REQUIRED)
+
 # Opções para Windows
 if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
@@ -18,6 +20,7 @@ target_include_directories(rhodium_node PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gui
     ${Qt6_INCLUDE_DIRS}
+    ${nlohmann_json_INCLUDE_DIRS}
 )
 
 # Encontrar dependências
@@ -35,6 +38,7 @@ add_executable(rhodium_node ${SOURCE_FILES})
 # Linkar bibliotecas
 target_link_libraries(rhodium_node
     PRIVATE
+    nlohmann_json::nlohmann_json
     OpenSSL::SSL
     OpenSSL::Crypto
 )
