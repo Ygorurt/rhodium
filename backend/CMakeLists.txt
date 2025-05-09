@@ -27,7 +27,7 @@ find_package(OpenSSL REQUIRED)
 
 # Adicionar biblioteca nlohmann/json (SOLUÇÃO PARA O PRIMEIRO ERRO)
 # Opção 1: Se você tiver o json.hpp localmente
-include_directories("D:/projeto/c++/teste/backend/include")  # assumindo que json.hpp está aqui
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Opção 2: Se estiver usando vcpkg
 # find_package(nlohmann_json REQUIRED)
