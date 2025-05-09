@@ -5,6 +5,7 @@ project(RhodiumBlockchain)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Configurações para Windows
 if(WIN32)
@@ -16,48 +17,41 @@ endif()
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
-if(NOT EXISTS "${QT_PATH}/lib/cmake/Qt6")
-    message(FATAL_ERROR "Qt6 não encontrado em ${QT_PATH}")
-endif()
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
-
-# Encontrar dependências
 find_package(OpenSSL REQUIRED)
 
-# Adicionar biblioteca nlohmann/json (SOLUÇÃO PARA O PRIMEIRO ERRO)
-# Opção 1: Se você tiver o json.hpp localmente
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+# Arquivos da UI (geração automática)
+file(GLOB UI_FILES "src/gui/*.ui")
+qt6_wrap_ui(UI_HEADERS ${UI_FILES})
 
-# Opção 2: Se estiver usando vcpkg
-# find_package(nlohmann_json REQUIRED)
-
-# Incluir diretórios (SOLUÇÃO PARA O SEGUNDO ERRO)
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain  # Adicionado para encontrar blockchain.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gui         # Adicionado para mainwindow.h
-    ${Qt6Core_INCLUDE_DIRS}
-    ${Qt6Gui_INCLUDE_DIRS}
-    ${Qt6Widgets_INCLUDE_DIRS}
-)
-
-# Modifique a lista de arquivos fonte
+# Arquivos fonte
 set(SOURCE_FILES
     src/blockchain/blockchain.cpp
     src/blockchain/blockchain.h
     src/gui/mainwindow.cpp
     src/gui/mainwindow.h
-    src/gui/mainwindow.ui  # Adicione esta linha
-    ${UI_HEADERS}          # Adicione esta linha
+    ${UI_HEADERS}
 )
-# Adicione antes do add_executable
-qt6_wrap_ui(UI_HEADERS
-    src/gui/mainwindow.ui
-)
+
+# Verifica se os arquivos existem
+foreach(file ${SOURCE_FILES})
+    if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${file})
+        message(WARNING "Arquivo não encontrado: ${file}")
+    endif()
+endforeach()
+
 # Executável principal
 add_executable(rhodium_node ${SOURCE_FILES})
+
+# Configuração de includes
+target_include_directories(rhodium_node PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_BINARY_DIR}  # Para arquivos gerados como ui_*.h
+    ${Qt6Core_INCLUDE_DIRS}
+    ${Qt6Gui_INCLUDE_DIRS}
+    ${Qt6Widgets_INCLUDE_DIRS}
+)
 
 # Linkar bibliotecas
 target_link_libraries(rhodium_node PRIVATE
@@ -66,13 +60,4 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    # nlohmann_json::nlohmann_json  # Descomente se usar vcpkg
-)
-
-# Configurar propriedades do destino para incluir diretórios
-target_include_directories(rhodium_node PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gui
 )
