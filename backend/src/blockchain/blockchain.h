@@ -4,45 +4,30 @@
 #include <vector>
 #include <string>
 #include <mutex>
-#include <atomic>
-#include <map>
-#include <nlohmann/json.hpp>
+#include <unordered_map>
 #include "block.h"
-#include "transaction.h"
+#include <nlohmann/json.hpp>
 
 class Blockchain {
 public:
     Blockchain();
-    ~Blockchain();
-
-    // Core functions
-    bool mineBlock(const std::string& minerAddress, bool usePoS = false);
-    void addTransaction(const Transaction& tx);
     
-    // Wallet operations
-    std::string createWallet();
+    bool mineBlock(const std::string& minerAddress, bool usePoS = false);
+    void saveToFile(const std::string& filename) const;
+    
+    // Adicione estas funções que estavam faltando
+    std::string lastHash() const;
+    void addTransaction(const std::string& from, const std::string& to, double amount);
     double getBalance(const std::string& address) const;
     
-    // PIX operations
-    bool registerPixKey(const std::string& address, const std::string& keyType, const std::string& keyValue);
-    std::string sendPix(const std::string& sender, const std::string& pixKey, double amount);
-    
-    // Persistence
-    void saveToFile(const std::string& filename) const;
-    void loadFromFile(const std::string& filename);
-    
-    // Getters
-    size_t getChainLength() const { return chain_.size(); }
-    std::vector<Transaction> getPendingTransactions() const { return pendingTxs_; }
-
 private:
     std::vector<Block> chain_;
     std::vector<Transaction> pendingTxs_;
-    std::map<std::string, double> balances_;
-    std::map<std::string, std::string> pixKeys_; // pix key -> address
+    std::unordered_map<std::string, double> balances_;
     mutable std::mutex mutex_;
     
-    std::string lastHash() const;
-    bool validateBlock(const Block& block) const;
+    // Função auxiliar para serialização
+    nlohmann::json toJson() const;
 };
+
 #endif // BLOCKCHAIN_H
