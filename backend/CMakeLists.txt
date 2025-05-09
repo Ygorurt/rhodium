@@ -24,21 +24,32 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 # Encontrar dependências
 find_package(OpenSSL REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# Incluir diretórios
+# Adicionar biblioteca nlohmann/json (SOLUÇÃO PARA O PRIMEIRO ERRO)
+# Opção 1: Se você tiver o json.hpp localmente
+include_directories("D:/projeto/c++/teste/backend/include")  # assumindo que json.hpp está aqui
+
+# Opção 2: Se estiver usando vcpkg
+# find_package(nlohmann_json REQUIRED)
+
+# Incluir diretórios (SOLUÇÃO PARA O SEGUNDO ERRO)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain  # Adicionado para encontrar blockchain.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gui         # Adicionado para mainwindow.h
     ${Qt6Core_INCLUDE_DIRS}
     ${Qt6Gui_INCLUDE_DIRS}
     ${Qt6Widgets_INCLUDE_DIRS}
 )
 
-# Arquivos fonte
-file(GLOB_RECURSE SOURCE_FILES
-    "src/*.cpp"
-    "src/*.h"
+# Arquivos fonte - MELHOR PRÁTICA: listar explicitamente em vez de usar GLOB
+set(SOURCE_FILES
+    src/blockchain/blockchain.cpp
+    src/blockchain/blockchain.h
+    src/gui/mainwindow.cpp
+    src/gui/mainwindow.h
+    # Adicione outros arquivos conforme necessário
 )
 
 # Executável principal
@@ -51,4 +62,13 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    # nlohmann_json::nlohmann_json  # Descomente se usar vcpkg
+)
+
+# Configurar propriedades do destino para incluir diretórios
+target_include_directories(rhodium_node PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gui
 )
