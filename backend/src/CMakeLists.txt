@@ -13,9 +13,11 @@ if(WIN32)
 endif()
 
 # Incluir diretórios
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+target_include_directories(rhodium_node PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gui
+    ${Qt6_INCLUDE_DIRS}
 )
 
 # Encontrar dependências
