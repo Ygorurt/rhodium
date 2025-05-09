@@ -4,6 +4,22 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include <QString>
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    
+    // Corrigindo as chamadas que estavam com erro
+    ui->chainLengthLabel->setText(QString("Comprimento da cadeia: %1").arg(blockchain.getChainLength()));
+    ui->pendingTxsLabel->setText(QString("Transações pendentes: %1").arg(blockchain.getPendingTransactions()));
+    
+    // Restante da implementação...
+}
 
 Blockchain::Blockchain() {
     // Create genesis block
