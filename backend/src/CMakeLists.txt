@@ -8,6 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(nlohmann_json REQUIRED)
 
+qt6_wrap_ui(UI_HEADERS src/gui/mainwindow.ui)
+
 # Opções para Windows
 if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
@@ -33,7 +35,14 @@ file(GLOB_RECURSE SOURCE_FILES
 )
 
 # Executável principal
-add_executable(rhodium_node ${SOURCE_FILES})
+add_executable(rhodium_node 
+    src/blockchain/blockchain.cpp
+    src/blockchain/blockchain.h
+    src/gui/mainwindow.cpp
+    src/gui/mainwindow.h
+    src/gui/mainwindow.ui
+    ${UI_HEADERS}
+)
 
 # Linkar bibliotecas
 target_link_libraries(rhodium_node
