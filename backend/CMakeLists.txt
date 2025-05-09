@@ -20,9 +20,15 @@ list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 find_package(OpenSSL REQUIRED)
 
-# Arquivos da UI (geração automática)
-file(GLOB UI_FILES "src/gui/*.ui")
-qt6_wrap_ui(UI_HEADERS ${UI_FILES})
+# Substitua a seção de UI por:
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui")
+    qt6_wrap_ui(UI_HEADERS src/gui/mainwindow.ui)
+    message(STATUS "Arquivo UI encontrado e será processado")
+else()
+    message(WARNING "Arquivo mainwindow.ui não encontrado - criando um vazio")
+    file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ui version=\"4.0\">\n <class>MainWindow</class>\n <widget class=\"QMainWindow\" name=\"MainWindow\">\n  <property name=\"geometry\">\n   <rect>\n    <x>0</x>\n    <y>0</y>\n    <width>400</width>\n    <height>300</height>\n   </rect>\n  </property>\n  <widget class=\"QWidget\" name=\"centralwidget\"/>\n </widget>\n</ui>")
+    qt6_wrap_ui(UI_HEADERS src/gui/mainwindow.ui)
+endif()
 
 # Arquivos fonte
 set(SOURCE_FILES
