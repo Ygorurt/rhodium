@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="chainLengthLabel">
+   <widget class="QPushButton" name="mineButton">
     <property name="geometry">
      <rect>
       <x>120</x>
