@@ -2,22 +2,21 @@
 #define TRANSACTION_H
 
 #include <string>
-#include <nlohmann/json.hpp>  // Adicione esta linha
-#include "transaction.h"
+#include <nlohmann/json.hpp>
 
-Transaction::Transaction(const std::string& from, const std::string& to, double amount)
-    : from_(from), to_(to), amount_(amount) {}
-
-std::string Transaction::getFrom() const { return from_; }
-std::string Transaction::getTo() const { return to_; }
-double Transaction::getAmount() const { return amount_; }
-
-nlohmann::json Transaction::toJson() const {
-    return {
-        {"from", from_},
-        {"to", to_},
-        {"amount", amount_}
-    };
-}
+class Transaction {
+public:
+    Transaction(const std::string& from, const std::string& to, double amount);
+    
+    std::string getFrom() const;
+    std::string getTo() const;
+    double getAmount() const;
+    nlohmann::json toJson() const;
+    
+private:
+    std::string from_;
+    std::string to_;
+    double amount_;
+};
 
 #endif // TRANSACTION_H
