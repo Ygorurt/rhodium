@@ -22,8 +22,6 @@ list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-set(NODE_EXE "C:/Program Files/nodejs/node.exe")
-
 # Configuração da interface web (opcional)
 option(BUILD_WEB_INTERFACE "Build web interface" ON)
 
@@ -34,9 +32,17 @@ if(BUILD_WEB_INTERFACE)
     if(NODE_EXE AND NPM_EXE)
         message(STATUS "Found Node.js: ${NODE_EXE}")
         message(STATUS "Found npm: ${NPM_EXE}")
-        # Adicione aqui os comandos para build do frontend
+        # Add your web interface build commands here
     else()
-        message(WARNING "Node.js/npm not found properly. Web interface enabled.")
+        message(WARNING "Node.js/npm not found properly. Web interface disabled.")
+        # Alternative: use execute_process to get node/npm paths
+        execute_process(COMMAND where node
+            OUTPUT_VARIABLE NODE_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if(NODE_PATH)
+            set(NODE_EXE ${NODE_PATH})
+            message(STATUS "Found Node.js via path: ${NODE_EXE}")
+        endif()
     endif()
 endif()
 
