@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 
+# Configuração para Windows
 if(WIN32)
+    # Usa PowerShell tradicional e desativa mensagens desnecessárias
     set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
-    set(CMAKE_MAKE_PROGRAM "powershell.exe")
+    set(CMAKE_SUPPRESS_REGENERATION_MESSAGE TRUE)
 endif()
 
 # Configurações do Qt
@@ -11,7 +13,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Configurações básicas
+# Padrão C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -19,17 +21,47 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-# Configuração da biblioteca JSON
-include(FetchContent)
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# Opções de configuração
+option(BUILD_WEB_INTERFACE "Habilita interface web" OFF)
+option(DOWNLOAD_JSON "Baixar nlohmann/json automaticamente" ON)
+
+# Configuração da biblioteca JSON (solução robusta)
+if(DOWNLOAD_JSON)
+    include(FetchContent)
+    
+    # Método alternativo via URL (mais confiável que Git)
+    FetchContent_Declare(
+        nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.3/include.zip
+        URL_HASH SHA256=6bea5877b1541d353bd77bdf372d6d8b4d3b5e21a8a5299d9d5f9779d0f5a9a9
+    )
+    
+    FetchContent_MakeAvailable(nlohmann_json)
+else()
+    find_package(nlohmann_json 3.11.3 REQUIRED)
+endif()
+
+# Configuração da interface web (opcional)
+if(BUILD_WEB_INTERFACE)
+    # Busca Node.js em locais comuns do Windows
+    find_program(NODE_EXE
+        NAMES node node.exe
+        PATHS
+            "$ENV{ProgramFiles}/nodejs"
+            "$ENV{SystemDrive}/nodejs"
+            "$ENV{LOCALAPPDATA}/Microsoft/WindowsApps"
+        DOC "Caminho para o Node.js"
+    )
+    
+    if(NODE_EXE)
+        message(STATUS "Node.js encontrado: ${NODE_EXE}")
+        # Adicione aqui os comandos para build do frontend
+    else()
+        message(WARNING "Node.js não encontrado - Interface web desabilitada")
+    endif()
+endif()
 
 # Configuração de diretórios
 include_directories(
@@ -37,17 +69,16 @@ include_directories(
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-# Geração dos arquivos UI
+# Geração de arquivos UI e meta-objetos Qt
 qt6_wrap_ui(UI_HEADERS 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui"
 )
 
-# Geração dos meta-objetos
 qt6_wrap_cpp(MOC_SOURCES 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.h"
 )
 
-# Arquivos fonte
+# Lista de arquivos fonte
 set(SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/blockchain.cpp"
@@ -61,7 +92,7 @@ set(SOURCE_FILES
 )
 
 # Executável principal
-add_executable(rhodium_node ${SOURCE_FILES})
+add_executable(rhodium_node WIN32 ${SOURCE_FILES})
 
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
@@ -69,42 +100,16 @@ target_include_directories(rhodium_node PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-# Linkar bibliotecas - note a mudança aqui para usar o alvo correto
+# Linkagem de bibliotecas
 target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    nlohmann_json::nlohmann_json  # Esta é a forma correta de referenciar a biblioteca
+    nlohmann_json::nlohmann_json
 )
 
-# Configuração da interface web (opcional)
-option(BUILD_WEB_INTERFACE "Build web interface" ON)
-
-if(BUILD_WEB_INTERFACE)
-    find_program(NODE_EXE node)
-    find_program(NPM_EXE npm)
-    
-    if(NODE_EXE AND NPM_EXE)
-        message(STATUS "Found Node.js: ${NODE_EXE}")
-        message(STATUS "Found npm: ${NPM_EXE}")
-        # Add your web interface build commands here
-    else()
-        message(WARNING "Node.js/npm not found properly. Web interface disabled.")
-        # Alternative: use execute_process to get node/npm paths
-        execute_process(COMMAND where node
-            OUTPUT_VARIABLE NODE_PATH
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        if(NODE_PATH)
-            set(NODE_EXE ${NODE_PATH})
-            message(STATUS "Found Node.js via path: ${NODE_EXE}")
-        endif()
-    endif()
-endif()
-
-# Configurações específicas para Windows
-if(WIN32)
-     add_definitions(-D_WINDOWS)
-endif()
-
 # Mensagem final
-message(STATUS "Configuração do projeto RhodiumBlockchain concluída com sucesso!")
+message(STATUS "\nConfiguração do RhodiumBlockchain concluída com sucesso!")
+message(STATUS "  - Versão: ${RhodiumBlockchain_VERSION}")
+message(STATUS "  - Interface web: ${BUILD_WEB_INTERFACE}")
+message(STATUS "  - Qt versão: ${Qt6_VERSION}\n")
