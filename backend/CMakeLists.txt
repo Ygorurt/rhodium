@@ -47,10 +47,10 @@ add_executable(rhodium_node ${SOURCE_FILES})
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include  # Se usar json.hpp manualmente
     ${CMAKE_CURRENT_BINARY_DIR}
     ${nlohmann_json_INCLUDE_DIRS}
     ${Qt6_INCLUDE_DIRS}
-)
 )
 
 # Linkar bibliotecas
