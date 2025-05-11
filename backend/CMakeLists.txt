@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.15)
 project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 
+# Configuração para Windows
+if(WIN32)
+    set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
+    set(CMAKE_SUPPRESS_REGENERATION_MESSAGE TRUE)
+endif()
+
 # Configurações básicas
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +37,27 @@ if(EXISTS "${JSON_HEADER}")
     add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 else()
     message(FATAL_ERROR "Arquivo json.hpp não encontrado em ${JSON_INCLUDE_DIR}")
+endif()
+
+# Configuração do frontend web (opcional)
+option(ENABLE_WEB_INTERFACE "Habilitar interface web" OFF)
+
+if(ENABLE_WEB_INTERFACE)
+    # Busca Node.js em locais comuns
+    find_program(NODE_EXE node
+        PATHS
+        "$ENV{ProgramFiles}/nodejs"
+        "$ENV{SystemDrive}/nodejs"
+        "$ENV{LOCALAPPDATA}/Microsoft/WindowsApps"
+    )
+    
+    if(NODE_EXE)
+        message(STATUS "Node.js encontrado: ${NODE_EXE}")
+        # Adicione aqui os comandos para build do frontend
+    else()
+        message(STATUS "Node.js não encontrado - Interface web desabilitada")
+        set(ENABLE_WEB_INTERFACE OFF)
+    endif()
 endif()
 
 # Lista de arquivos fonte
@@ -90,4 +117,9 @@ if(WIN32)
     )
 endif()
 
-message(STATUS "Configuração concluída com sucesso!")
+# Desativa a criação de atalhos se não for necessário
+set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY TRUE)
+
+message(STATUS "\nConfiguração concluída com sucesso!")
+message(STATUS "  - Interface web: ${ENABLE_WEB_INTERFACE}")
+message(STATUS "  - Qt versão: ${Qt6_VERSION}")
