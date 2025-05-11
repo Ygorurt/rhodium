@@ -18,6 +18,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+add_library(nlohmann_json INTERFACE)
+target_include_directories(nlohmann_json INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/nlohmann
+)
+
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
