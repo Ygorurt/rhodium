@@ -21,6 +21,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(updateTimer, &QTimer::timeout, this, &MainWindow::updateChainStatus);
     updateTimer->start(5000); // Atualiza a cada 5 segundos
 
+    QPushButton* mineButton = new QPushButton("Minar", this);
+mineButton->setObjectName("mineButton");
+mineButton->setGeometry(100, 100, 100, 30);  // Ajuste posição/tamanho
+connect(mineButton, &QPushButton::clicked,
+        this, &MainWindow::onMineButtonClicked);
+
     // Conexão dos botões
     connect(ui->mineButton, &QPushButton::clicked, 
             this, &MainWindow::onMineButtonClicked);
