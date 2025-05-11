@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 project(RhodiumBlockchain)
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
 # Configurações básicas
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,6 +15,9 @@ set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
+
+qt6_wrap_cpp(MOC_SOURCES src/gui/mainwindow.h)
+
 
 # Configuração do OpenSSL
 find_package(OpenSSL REQUIRED)
@@ -38,6 +45,7 @@ set(SOURCE_FILES
     src/gui/mainwindow.cpp
     src/gui/mainwindow.h
     src/gui/mainwindow.ui
+    ${MOC_SOURCES}
     ${UI_HEADERS}
 )
 
