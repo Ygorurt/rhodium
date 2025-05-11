@@ -18,10 +18,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(nlohmann_json INTERFACE)
-target_include_directories(nlohmann_json INTERFACE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
+set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/backend/include")
+
+if(EXISTS "${JSON_INCLUDE_DIR}/nlohmann/json.hpp")
+    message(STATUS "Usando nlohmann/json local em: ${JSON_INCLUDE_DIR}")
+    
+    # Cria um alvo interface para a biblioteca
+    add_library(nlohmann_json INTERFACE)
+    target_include_directories(nlohmann_json INTERFACE ${JSON_INCLUDE_DIR})
+    
+    # Cria o alias no namespace
+    add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
+else()
+    message(FATAL_ERROR "Arquivo json.hpp não encontrado em ${JSON_INCLUDE_DIR}/nlohmann")
+endif()
 
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
