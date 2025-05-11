@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 
+if(WIN32)
+    set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
+    set(CMAKE_MAKE_PROGRAM "powershell.exe")
+endif()
+
 # Configurações do Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -16,6 +21,22 @@ set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
+
+# Configuração da interface web (opcional)
+option(BUILD_WEB_INTERFACE "Build web interface" OFF)
+
+if(BUILD_WEB_INTERFACE)
+    find_program(NODE_EXE node)
+    find_program(NPM_EXE npm)
+    
+    if(NODE_EXE AND NPM_EXE)
+        message(STATUS "Found Node.js: ${NODE_EXE}")
+        message(STATUS "Found npm: ${NPM_EXE}")
+        # Adicione aqui os comandos para build do frontend
+    else()
+        message(WARNING "Node.js/npm not found properly. Web interface disabled.")
+    endif()
+endif()
 
 # Configuração da biblioteca JSON
 include(FetchContent)
@@ -73,19 +94,8 @@ target_link_libraries(rhodium_node PRIVATE
 )
 # Configurações específicas para Windows
 if(WIN32)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
-    set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
-    set(CMAKE_MAKE_PROGRAM "powershell.exe")
+     add_definitions(-D_WINDOWS)
 endif()
 
-option(ENABLE_WEB_INTERFACE "Habilita a interface web" OFF)
-
-if(ENABLE_WEB_INTERFACE)
-    find_program(NPM npm)
-    if(NOT NPM)
-        message(WARNING "Node.js não encontrado - Interface web desabilitada")
-    else()
-        # Comandos para build do frontend
-    endif()
-endif()
-
+# Mensagem final
+message(STATUS "Configuração do projeto RhodiumBlockchain concluída com sucesso!")
