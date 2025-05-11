@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/backend/include")
+set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(EXISTS "${JSON_INCLUDE_DIR}/json.hpp")
     message(STATUS "Usando nlohmann/json local em: ${JSON_INCLUDE_DIR}")
