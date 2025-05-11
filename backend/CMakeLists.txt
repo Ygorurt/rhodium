@@ -103,7 +103,7 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    nlohmann_json::nlohmann_json
+    nlohmann_json::nlohmann_json  # Agora deve funcionar
 )
 
 # Mensagem final
