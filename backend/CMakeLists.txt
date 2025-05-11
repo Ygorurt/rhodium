@@ -1,43 +1,39 @@
 cmake_minimum_required(VERSION 3.15)
 project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 
-# Configuração para Windows
+# Windows-specific configurations
 if(WIN32)
-    # Usa PowerShell tradicional e desativa mensagens desnecessárias
     set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
     set(CMAKE_SUPPRESS_REGENERATION_MESSAGE TRUE)
 endif()
 
-# Configurações do Qt
+# Qt configurations
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Padrão C++17
+# C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Configuração robusta para nlohmann/json local
-set(JSON_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# Qt setup
+set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
+list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
+
+# JSON library configuration
+set(JSON_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/backend/include")
 set(JSON_HEADER_FILE "${JSON_BASE_DIR}/nlohmann/json.hpp")
 
-# Verificação explícita do arquivo
 if(EXISTS "${JSON_HEADER_FILE}")
-    message(STATUS "Arquivo json.hpp encontrado em: ${JSON_HEADER_FILE}")
-
-    # Executável principal
-add_executable(rhodium_node WIN32 ${SOURCE_FILES})
-
-    # Cria um alvo interface para a biblioteca
+    message(STATUS "Using local nlohmann/json from: ${JSON_HEADER_FILE}")
+    
     add_library(nlohmann_json INTERFACE)
     target_include_directories(nlohmann_json INTERFACE ${JSON_BASE_DIR})
-    
-    # Cria o alias no namespace
     add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 else()
-    # Solução alternativa se o arquivo não for encontrado
-    message(WARNING "Arquivo json.hpp não encontrado, baixando via FetchContent...")
+    message(WARNING "Local json.hpp not found, downloading via FetchContent...")
     
     include(FetchContent)
     FetchContent_Declare(
@@ -48,84 +44,75 @@ else()
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
-# Linkagem garantida
-if(TARGET nlohmann_json::nlohmann_json)
-    target_link_libraries(rhodium_node PRIVATE nlohmann_json::nlohmann_json)
-else()
-    message(FATAL_ERROR "Não foi possível configurar nlohmann_json")
-endif()
-# Configuração do Qt
-set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
-list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
+# Web interface option
+option(BUILD_WEB_INTERFACE "Enable web interface" OFF)
 
-# Opções de configuração
-option(BUILD_WEB_INTERFACE "Habilita interface web" ON)
-
-# Configuração da interface web (opcional)
 if(BUILD_WEB_INTERFACE)
-    # Busca Node.js em locais comuns do Windows
     find_program(NODE_EXE
         NAMES node node.exe
         PATHS
             "$ENV{ProgramFiles}/nodejs"
             "$ENV{SystemDrive}/nodejs"
             "$ENV{LOCALAPPDATA}/Microsoft/WindowsApps"
-        DOC "Caminho para o Node.js"
+        DOC "Path to Node.js executable"
     )
     
     if(NODE_EXE)
-        message(STATUS "Node.js encontrado: ${NODE_EXE}")
-        # Adicione aqui os comandos para build do frontend
+        message(STATUS "Found Node.js: ${NODE_EXE}")
+        # Add web interface build commands here
     else()
-        message(WARNING "Node.js não encontrado - Interface web desabilitada")
+        message(WARNING "Node.js not found - Web interface disabled")
     endif()
 endif()
 
-# Configuração de diretórios
-include_directories(
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_BINARY_DIR}"
-)
-
-# Geração de arquivos UI e meta-objetos Qt
-qt6_wrap_ui(UI_HEADERS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui"
-)
-
-qt6_wrap_cpp(MOC_SOURCES 
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.h"
-)
-
-# Lista de arquivos fonte
+# Source files
 set(SOURCE_FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/blockchain.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/block.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/transaction.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui"
-    ${UI_HEADERS}
-    ${MOC_SOURCES}
+    src/main.cpp
+    src/blockchain/blockchain.cpp
+    src/blockchain/block.cpp
+    src/blockchain/transaction.cpp
+    src/gui/mainwindow.cpp
 )
 
-# Configuração de includes
+# Header files
+set(HEADER_FILES
+    src/blockchain/blockchain.h
+    src/blockchain/block.h
+    src/blockchain/transaction.h
+    src/gui/mainwindow.h
+)
+
+# UI files
+set(UI_FILES
+    src/gui/mainwindow.ui
+)
+
+# Create main executable
+add_executable(rhodium_node WIN32 ${SOURCE_FILES} ${HEADER_FILES})
+
+# Process UI and MOC files
+qt6_wrap_ui(UI_HEADERS ${UI_FILES})
+qt6_wrap_cpp(MOC_SOURCES ${HEADER_FILES})
+target_sources(rhodium_node PRIVATE ${UI_HEADERS} ${MOC_SOURCES})
+
+# Include directories
 target_include_directories(rhodium_node PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/backend/include"
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-# Linkagem de bibliotecas
+# Link libraries
 target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    nlohmann_json::nlohmann_json  # Agora deve funcionar
+    nlohmann_json::nlohmann_json
 )
 
-# Mensagem final
-message(STATUS "\nConfiguração do RhodiumBlockchain concluída com sucesso!")
-message(STATUS "  - Versão: ${RhodiumBlockchain_VERSION}")
-message(STATUS "  - Interface web: ${BUILD_WEB_INTERFACE}")
-message(STATUS "  - Qt versão: ${Qt6_VERSION}\n")
+# Final status message
+message(STATUS "\nRhodiumBlockchain configuration successful!")
+message(STATUS "  - Version: ${RhodiumBlockchain_VERSION}")
+message(STATUS "  - Qt version: ${Qt6_VERSION}")
+message(STATUS "  - Web interface: ${BUILD_WEB_INTERFACE}")
+message(STATUS "  - JSON path: ${JSON_BASE_DIR}\n")
