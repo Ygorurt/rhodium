@@ -20,7 +20,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(nlohmann_json INTERFACE)
 target_include_directories(nlohmann_json INTERFACE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/nlohmann
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 # Configuração do Qt
@@ -29,24 +29,7 @@ list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
 # Opções de configuração
-option(BUILD_WEB_INTERFACE "Habilita interface web" OFF)
-option(DOWNLOAD_JSON "Baixar nlohmann/json automaticamente" ON)
-
-# Configuração da biblioteca JSON (solução robusta)
-if(DOWNLOAD_JSON)
-    include(FetchContent)
-    
-    # Método alternativo via URL (mais confiável que Git)
-    FetchContent_Declare(
-        nlohmann_json
-        URL https://github.com/nlohmann/json/releases/download/v3.11.3/include.zip
-        URL_HASH SHA256=6bea5877b1541d353bd77bdf372d6d8b4d3b5e21a8a5299d9d5f9779d0f5a9a9
-    )
-    
-    FetchContent_MakeAvailable(nlohmann_json)
-else()
-    find_package(nlohmann_json 3.11.3 REQUIRED)
-endif()
+option(BUILD_WEB_INTERFACE "Habilita interface web" ON)
 
 # Configuração da interface web (opcional)
 if(BUILD_WEB_INTERFACE)
