@@ -24,8 +24,9 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
-    QPushButton *chainLengthLabel;
+    QPushButton *mineButton;
     QLabel *pendingTxsLabel;
+    QLabel *chainLengthLabel;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -36,12 +37,15 @@ public:
         MainWindow->resize(800, 600);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
-        chainLengthLabel = new QPushButton(centralwidget);
-        chainLengthLabel->setObjectName("chainLengthLabel");
-        chainLengthLabel->setGeometry(QRect(120, 90, 75, 24));
+        mineButton = new QPushButton(centralwidget);
+        mineButton->setObjectName("mineButton");
+        mineButton->setGeometry(QRect(120, 90, 75, 24));
         pendingTxsLabel = new QLabel(centralwidget);
         pendingTxsLabel->setObjectName("pendingTxsLabel");
         pendingTxsLabel->setGeometry(QRect(320, 200, 49, 16));
+        chainLengthLabel = new QLabel(centralwidget);
+        chainLengthLabel->setObjectName("chainLengthLabel");
+        chainLengthLabel->setGeometry(QRect(380, 100, 49, 16));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -59,8 +63,9 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
-        chainLengthLabel->setText(QCoreApplication::translate("MainWindow", "PushButton", nullptr));
+        mineButton->setText(QCoreApplication::translate("MainWindow", "PushButton", nullptr));
         pendingTxsLabel->setText(QCoreApplication::translate("MainWindow", "TextLabel", nullptr));
+        chainLengthLabel->setText(QCoreApplication::translate("MainWindow", "TextLabel", nullptr));
     } // retranslateUi
 
 };
