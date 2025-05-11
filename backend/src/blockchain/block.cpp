@@ -1,5 +1,4 @@
 #include "block.h"
-#include <ctime>
 #include <sstream>
 #include <iomanip>
 #include <openssl/sha.h>
