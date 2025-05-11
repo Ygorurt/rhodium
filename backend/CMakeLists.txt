@@ -51,6 +51,7 @@ target_include_directories(rhodium_node PRIVATE
     ${nlohmann_json_INCLUDE_DIRS}
     ${Qt6_INCLUDE_DIRS}
 )
+)
 
 # Linkar bibliotecas
 target_link_libraries(rhodium_node PRIVATE
