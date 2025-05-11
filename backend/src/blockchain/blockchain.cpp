@@ -1,22 +1,10 @@
 #include "blockchain.h"
 #include <fstream>
-#include <openssl/sha.h>
-#include <iomanip>
-#include <sstream>
-#include <stdexcept>
-#include <QString>
 
 Blockchain::Blockchain() {
     // Create genesis block
     Block genesis(0, "0", {});
     chain_.push_back(genesis);
-}
-
-std::string Blockchain::lastHash() const {
-    if (chain_.empty()) {
-        return "0";
-    }
-    return chain_.back().getHash();
 }
 
 bool Blockchain::mineBlock(const std::string& minerAddress, bool usePoS) {
@@ -40,6 +28,19 @@ bool Blockchain::mineBlock(const std::string& minerAddress, bool usePoS) {
     return true;
 }
 
+void Blockchain::saveToFile(const std::string& filename) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::ofstream out(filename);
+    out << toJson().dump(4);
+}
+
+std::string Blockchain::lastHash() const {
+    if (chain_.empty()) {
+        return "0";
+    }
+    return chain_.back().getHash();
+}
+
 void Blockchain::addTransaction(const std::string& from, const std::string& to, double amount) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (amount <= 0) {
@@ -54,6 +55,14 @@ double Blockchain::getBalance(const std::string& address) const {
     return it != balances_.end() ? it->second : 0.0;
 }
 
+size_t Blockchain::getChainLength() const {
+    return chain_.size();
+}
+
+size_t Blockchain::getPendingTransactions() const {
+    return pendingTxs_.size();
+}
+
 nlohmann::json Blockchain::toJson() const {
     nlohmann::json j;
     j["chain"] = nlohmann::json::array();
@@ -61,14 +70,4 @@ nlohmann::json Blockchain::toJson() const {
         j["chain"].push_back(block.toJson());
     }
     return j;
-}
-
-void Blockchain::saveToFile(const std::string& filename) const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    nlohmann::json j = toJson();
-    std::ofstream out(filename);
-    if (!out) {
-        throw std::runtime_error("Failed to open file for writing");
-    }
-    out << j.dump(4);
 }
