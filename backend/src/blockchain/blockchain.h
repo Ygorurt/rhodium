@@ -5,8 +5,8 @@
 #include <string>
 #include <mutex>
 #include <unordered_map>
-#include <nlohmann/json.hpp>  // Adicione esta linha
 #include "block.h"
+#include <nlohmann/json.hpp>
 
 class Blockchain {
 public:
@@ -17,10 +17,8 @@ public:
     std::string lastHash() const;
     void addTransaction(const std::string& from, const std::string& to, double amount);
     double getBalance(const std::string& address) const;
-    
-    // Adicione estas funções que estavam sendo usadas
-    size_t getChainLength() const { return chain_.size(); }
-    size_t getPendingTransactions() const { return pendingTxs_.size(); }
+    size_t getChainLength() const;
+    size_t getPendingTransactions() const;
     
 private:
     std::vector<Block> chain_;
