@@ -74,12 +74,18 @@ target_link_libraries(rhodium_node PRIVATE
 # Configurações específicas para Windows
 if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
+    set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
+    set(CMAKE_MAKE_PROGRAM "powershell.exe")
 endif()
 
-set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
-if(WIN32)
-    find_program(PWSH_PATH pwsh.exe)
-    if(NOT PWSH_PATH)
-        set(CMAKE_MAKE_PROGRAM "powershell.exe")
+option(ENABLE_WEB_INTERFACE "Habilita a interface web" OFF)
+
+if(ENABLE_WEB_INTERFACE)
+    find_program(NPM npm)
+    if(NOT NPM)
+        message(WARNING "Node.js não encontrado - Interface web desabilitada")
+    else()
+        # Comandos para build do frontend
     endif()
 endif()
+
