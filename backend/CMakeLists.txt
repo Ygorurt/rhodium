@@ -71,8 +71,15 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Widgets
     nlohmann_json::nlohmann_json  # Esta é a forma correta de referenciar a biblioteca
 )
-
 # Configurações específicas para Windows
 if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
+endif()
+
+set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
+if(WIN32)
+    find_program(PWSH_PATH pwsh.exe)
+    if(NOT PWSH_PATH)
+        set(CMAKE_MAKE_PROGRAM "powershell.exe")
+    endif()
 endif()
