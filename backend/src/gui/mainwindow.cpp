@@ -32,6 +32,25 @@ connect(mineButton, &QPushButton::clicked,
             this, &MainWindow::onMineButtonClicked);
 }
 
+// Implementações Qt obrigatórias
+const QMetaObject* MainWindow::metaObject() const {
+    return QObject::d_ptr->metaObject ? 
+           QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
+}
+
+void* MainWindow::qt_metacast(const char* className) {
+    if (!strcmp(className, "MainWindow"))
+        return static_cast<void*>(this);
+    return QMainWindow::qt_metacast(className);
+}
+
+int MainWindow::qt_metacall(QMetaObject::Call call, int id, void** args) {
+    id = QMainWindow::qt_metacall(call, id, args);
+    if (id < 0)
+        return id;
+    return id;
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
