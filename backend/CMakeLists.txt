@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(RhodiumBlockchain)
+project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 
 # Configurações do Qt
 set(CMAKE_AUTOMOC ON)
@@ -13,7 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
-list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
+list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
@@ -26,19 +26,31 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+# Configuração de diretórios
+include_directories(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
 # Geração dos arquivos UI
-qt6_wrap_ui(UI_HEADERS src/gui/mainwindow.ui)
-qt6_wrap_cpp(MOC_SOURCES src/gui/mainwindow.h)
+qt6_wrap_ui(UI_HEADERS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui"
+)
+
+# Geração dos meta-objetos
+qt6_wrap_cpp(MOC_SOURCES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.h"
+)
 
 # Arquivos fonte
 set(SOURCE_FILES
-    src/main.cpp
-    src/blockchain/blockchain.cpp
-    src/blockchain/block.cpp
-    src/blockchain/transaction.cpp
-    src/gui/mainwindow.cpp
-    src/gui/mainwindow.h
-    src/gui/mainwindow.ui
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/blockchain.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/block.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/blockchain/transaction.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gui/mainwindow.ui"
     ${UI_HEADERS}
     ${MOC_SOURCES}
 )
@@ -48,8 +60,8 @@ add_executable(rhodium_node ${SOURCE_FILES})
 
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_BINARY_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_BINARY_DIR}"
     ${nlohmann_json_INCLUDE_DIRS}
     ${Qt6_INCLUDE_DIRS}
 )
@@ -60,3 +72,8 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Gui
     Qt6::Widgets
 )
+
+# Configurações específicas para Windows
+if(WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
+endif()
