@@ -17,7 +17,7 @@ list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 # Configuração robusta para nlohmann_json
-set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/backend/include/nlohmann")
+set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/nlohmann")
 set(JSON_HEADER "${JSON_INCLUDE_DIR}/json.hpp")
 
 if(EXISTS "${JSON_HEADER}")
@@ -66,7 +66,7 @@ target_sources(rhodium_node PRIVATE ${UI_HEADERS} ${MOC_SOURCES})
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/backend/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
