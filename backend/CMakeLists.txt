@@ -40,7 +40,7 @@ else()
 endif()
 
 # Configuração do frontend web (opcional)
-option(ENABLE_WEB_INTERFACE "Habilitar interface web" OFF)
+option(ENABLE_WEB_INTERFACE "Habilitar interface web" ON)
 
 if(ENABLE_WEB_INTERFACE)
     # Busca Node.js em locais comuns
