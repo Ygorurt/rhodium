@@ -26,10 +26,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+add_library(nlohmann_json INTERFACE IMPORTED)
+target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
+
 # Configuração de diretórios
 include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_BINARY_DIR}"
+    ${nlohmann_json_SOURCE_DIR}/include
 )
 
 # Geração dos arquivos UI
