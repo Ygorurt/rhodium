@@ -25,7 +25,10 @@ set(JSON_HEADER_FILE "${JSON_BASE_DIR}/nlohmann/json.hpp")
 # Verificação explícita do arquivo
 if(EXISTS "${JSON_HEADER_FILE}")
     message(STATUS "Arquivo json.hpp encontrado em: ${JSON_HEADER_FILE}")
-    
+
+    # Executável principal
+add_executable(rhodium_node WIN32 ${SOURCE_FILES})
+
     # Cria um alvo interface para a biblioteca
     add_library(nlohmann_json INTERFACE)
     target_include_directories(nlohmann_json INTERFACE ${JSON_BASE_DIR})
@@ -106,9 +109,6 @@ set(SOURCE_FILES
     ${UI_HEADERS}
     ${MOC_SOURCES}
 )
-
-# Executável principal
-add_executable(rhodium_node WIN32 ${SOURCE_FILES})
 
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
