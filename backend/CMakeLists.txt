@@ -17,14 +17,19 @@ list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-add_library(nlohmann_json INTERFACE IMPORTED)
-target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
+# Configuração da biblioteca JSON
+include(FetchContent)
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+)
+FetchContent_MakeAvailable(nlohmann_json)
 
 # Configuração de diretórios
 include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_BINARY_DIR}"
-    ${nlohmann_json_SOURCE_DIR}/include
 )
 
 # Geração dos arquivos UI
@@ -57,15 +62,14 @@ add_executable(rhodium_node ${SOURCE_FILES})
 target_include_directories(rhodium_node PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_BINARY_DIR}"
-    ${nlohmann_json_INCLUDE_DIRS}
-    ${Qt6_INCLUDE_DIRS}
 )
 
-# Linkar bibliotecas
+# Linkar bibliotecas - note a mudança aqui para usar o alvo correto
 target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    nlohmann_json::nlohmann_json  # Esta é a forma correta de referenciar a biblioteca
 )
 
 # Configurações específicas para Windows
