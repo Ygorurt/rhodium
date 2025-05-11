@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(RhodiumBlockchain)
 
+# Configurações do Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -16,12 +17,6 @@ list(APPEND CMAKE_PREFIX_PATH ${QT_PATH})
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-qt6_wrap_cpp(MOC_SOURCES src/gui/mainwindow.h)
-
-
-# Configuração do OpenSSL
-find_package(OpenSSL REQUIRED)
-
 # Configuração da biblioteca JSON
 include(FetchContent)
 FetchContent_Declare(
@@ -32,9 +27,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nlohmann_json)
 
 # Geração dos arquivos UI
-qt6_wrap_ui(UI_HEADERS 
-    src/gui/mainwindow.ui
-)
+qt6_wrap_ui(UI_HEADERS src/gui/mainwindow.ui)
+qt6_wrap_cpp(MOC_SOURCES src/gui/mainwindow.h)
 
 # Arquivos fonte
 set(SOURCE_FILES
@@ -45,8 +39,8 @@ set(SOURCE_FILES
     src/gui/mainwindow.cpp
     src/gui/mainwindow.h
     src/gui/mainwindow.ui
-    ${MOC_SOURCES}
     ${UI_HEADERS}
+    ${MOC_SOURCES}
 )
 
 # Executável principal
@@ -55,7 +49,6 @@ add_executable(rhodium_node ${SOURCE_FILES})
 # Configuração de includes
 target_include_directories(rhodium_node PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/include  # Se usar json.hpp manualmente
     ${CMAKE_CURRENT_BINARY_DIR}
     ${nlohmann_json_INCLUDE_DIRS}
     ${Qt6_INCLUDE_DIRS}
@@ -66,9 +59,4 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    OpenSSL::SSL
-    OpenSSL::Crypto
 )
-
-# Marca os arquivos gerados
-set_source_files_properties(${UI_HEADERS} PROPERTIES GENERATED TRUE)
