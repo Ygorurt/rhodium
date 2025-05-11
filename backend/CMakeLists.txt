@@ -22,30 +22,6 @@ list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets UiTools)
 
-# Configuração da interface web (opcional)
-option(BUILD_WEB_INTERFACE "Build web interface" ON)
-
-if(BUILD_WEB_INTERFACE)
-    find_program(NODE_EXE node)
-    find_program(NPM_EXE npm)
-    
-    if(NODE_EXE AND NPM_EXE)
-        message(STATUS "Found Node.js: ${NODE_EXE}")
-        message(STATUS "Found npm: ${NPM_EXE}")
-        # Add your web interface build commands here
-    else()
-        message(WARNING "Node.js/npm not found properly. Web interface disabled.")
-        # Alternative: use execute_process to get node/npm paths
-        execute_process(COMMAND where node
-            OUTPUT_VARIABLE NODE_PATH
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        if(NODE_PATH)
-            set(NODE_EXE ${NODE_PATH})
-            message(STATUS "Found Node.js via path: ${NODE_EXE}")
-        endif()
-    endif()
-endif()
-
 # Configuração da biblioteca JSON
 include(FetchContent)
 FetchContent_Declare(
@@ -100,6 +76,31 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Widgets
     nlohmann_json::nlohmann_json  # Esta é a forma correta de referenciar a biblioteca
 )
+
+# Configuração da interface web (opcional)
+option(BUILD_WEB_INTERFACE "Build web interface" ON)
+
+if(BUILD_WEB_INTERFACE)
+    find_program(NODE_EXE node)
+    find_program(NPM_EXE npm)
+    
+    if(NODE_EXE AND NPM_EXE)
+        message(STATUS "Found Node.js: ${NODE_EXE}")
+        message(STATUS "Found npm: ${NPM_EXE}")
+        # Add your web interface build commands here
+    else()
+        message(WARNING "Node.js/npm not found properly. Web interface disabled.")
+        # Alternative: use execute_process to get node/npm paths
+        execute_process(COMMAND where node
+            OUTPUT_VARIABLE NODE_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if(NODE_PATH)
+            set(NODE_EXE ${NODE_PATH})
+            message(STATUS "Found Node.js via path: ${NODE_EXE}")
+        endif()
+    endif()
+endif()
+
 # Configurações específicas para Windows
 if(WIN32)
      add_definitions(-D_WINDOWS)
