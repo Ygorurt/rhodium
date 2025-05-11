@@ -18,21 +18,39 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# Configuração robusta para nlohmann/json local
+set(JSON_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(JSON_HEADER_FILE "${JSON_BASE_DIR}/nlohmann/json.hpp")
 
-if(EXISTS "${JSON_INCLUDE_DIR}/json.hpp")
-    message(STATUS "Usando nlohmann/json local em: ${JSON_INCLUDE_DIR}")
+# Verificação explícita do arquivo
+if(EXISTS "${JSON_HEADER_FILE}")
+    message(STATUS "Arquivo json.hpp encontrado em: ${JSON_HEADER_FILE}")
     
     # Cria um alvo interface para a biblioteca
     add_library(nlohmann_json INTERFACE)
-    target_include_directories(nlohmann_json INTERFACE ${JSON_INCLUDE_DIR})
+    target_include_directories(nlohmann_json INTERFACE ${JSON_BASE_DIR})
     
     # Cria o alias no namespace
     add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 else()
-    message(FATAL_ERROR "Arquivo json.hpp não encontrado em ${JSON_INCLUDE_DIR}/nlohmann")
+    # Solução alternativa se o arquivo não for encontrado
+    message(WARNING "Arquivo json.hpp não encontrado, baixando via FetchContent...")
+    
+    include(FetchContent)
+    FetchContent_Declare(
+        nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.3/include.zip
+        URL_HASH SHA256=a22461d13119ac5c78f205d3df1db13403e58ce1bb1794edc9313677313f4a9d
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
+# Linkagem garantida
+if(TARGET nlohmann_json::nlohmann_json)
+    target_link_libraries(rhodium_node PRIVATE nlohmann_json::nlohmann_json)
+else()
+    message(FATAL_ERROR "Não foi possível configurar nlohmann_json")
+endif()
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
