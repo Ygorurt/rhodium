@@ -69,6 +69,24 @@ set(SOURCE_FILES
     src/gui/mainwindow.cpp
 )
 
+# Configuração corrigida para o frontend
+set(FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../frontend")
+
+if(EXISTS "${FRONTEND_DIR}/package.json")
+    message(STATUS "Frontend encontrado em: ${FRONTEND_DIR}")
+    
+    # Comandos para build do frontend
+    add_custom_command(
+        TARGET rhodium_node POST_BUILD
+        COMMAND npm install
+        COMMAND npm run build
+        WORKING_DIRECTORY ${FRONTEND_DIR}
+        COMMENT "Building frontend..."
+    )
+else()
+    message(WARNING "Frontend não encontrado em ${FRONTEND_DIR}")
+endif()
+
 # Lista de cabeçalhos
 set(HEADER_FILES
     src/blockchain/blockchain.h
