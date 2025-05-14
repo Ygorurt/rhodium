@@ -70,7 +70,7 @@ set(SOURCE_FILES
 )
 
 # Configuração corrigida para o frontend
-set(FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../frontend")
+set(FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/frontend")
 
 if(EXISTS "${FRONTEND_DIR}/package.json")
     message(STATUS "Frontend encontrado em: ${FRONTEND_DIR}")
