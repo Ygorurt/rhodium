@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 #include <ctime>
-#include "transaction.h"
 #include <nlohmann/json.hpp>
 #include "crypto/sha256.h"
+
+class Transaction;
 
 class Block {
 public:
