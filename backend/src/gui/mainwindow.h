@@ -1,18 +1,16 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QStatusBar>
-#include <QSystemTrayIcon>
-#include "../blockchain/blockchain.h"
-#include "../blockchain/walletwidget.h"
-#include "../network/networkwidget.h"
-#include "../blockchain/miningwidget.h"
-#include "../blockchain/transactionwidget.h"
+#include <QLabel>
+#include "blockchain.h"
+#include "powminerwidget.h"
+#include "posvalidatorwidget.h"
+#include "transactionwidget.h"
+#include "networkwidget.h"
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -20,27 +18,25 @@ public:
     ~MainWindow();
 
 private slots:
-    void updateStatus();
-    void showNotification(const QString &title, const QString &message);
-    void onBlockMined(const QString &blockHash);
-    void onTransactionProcessed(const QString &txId);
-    void onPeerConnected(const QString &peer);
-    void onPeerDisconnected(const QString &peer);
+    void updateStatusBar();
+    void onBlockMined(const Block& newBlock);
+    void onTransactionAdded(const Transaction& tx);
 
 private:
-    void setupUi();
-    void setupMenu();
-    void setupTrayIcon();
-    void connectSignals();
-
+    void setupUI();
+    void setupConnections();
+    
     Blockchain blockchain;
-    QTabWidget *tabWidget;
-    WalletWidget *walletWidget;
+    
+    // Widgets
+    QTabWidget *mainTabs;
+    TransactionWidget *txWidget;
+    POWMinerWidget *powMiner;
+    POSValidatorWidget *posValidator;
     NetworkWidget *networkWidget;
-    MiningWidget *miningWidget;
-    TransactionWidget *transactionWidget;
-    QStatusBar *statusBar;
-    QSystemTrayIcon *trayIcon;
+    
+    // Status Bar
+    QLabel *chainStatus;
+    QLabel *peerStatus;
+    QLabel *miningStatus;
 };
-
-#endif // MAINWINDOW_H
