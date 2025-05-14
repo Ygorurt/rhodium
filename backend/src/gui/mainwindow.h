@@ -5,11 +5,11 @@
 #include <QTabWidget>
 #include <QStatusBar>
 #include <QSystemTrayIcon>
-#include "blockchain.h"
-#include "walletwidget.h"
-#include "networkwidget.h"
-#include "miningwidget.h"
-#include "transactionwidget.h"
+#include "../blockchain/blockchain.h"
+#include "../blockchain/walletwidget.h"
+#include "../network/networkwidget.h"
+#include "../blockchain/miningwidget.h"
+#include "../blockchain/transactionwidget.h"
 
 class MainWindow : public QMainWindow
 {
