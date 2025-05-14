@@ -31,11 +31,11 @@ else()
     message(FATAL_ERROR "OpenSSL não encontrado - Necessário para criptografia ECDSA")
 endif()
 
-# Configuração para nlohmann/json
-find_package(nlohmann_json 3.9.1 REQUIRED)
-if(nlohmann_json_FOUND)
-    message(STATUS "nlohmann/json encontrado: v${nlohmann_json_VERSION}")
-endif()
+# Substitua a seção nlohmann_json por:
+set(JSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_library(nlohmann_json INTERFACE)
+target_include_directories(nlohmann_json INTERFACE ${JSON_INCLUDE_DIR})
+add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 
 # Definir estrutura de diretórios
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
