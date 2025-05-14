@@ -1,0 +1,16 @@
+/* resources/styles/main.css */
+QMainWindow {
+    background-color: #f5f5f5;
+}
+
+QPushButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
