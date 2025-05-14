@@ -2,11 +2,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "../blockchain/blockchain.h"
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+#include <QTabWidget>
+#include <QStatusBar>
+#include <QSystemTrayIcon>
+#include "blockchain.h"
+#include "walletwidget.h"
+#include "networkwidget.h"
+#include "miningwidget.h"
+#include "transactionwidget.h"
 
 class MainWindow : public QMainWindow
 {
@@ -17,12 +20,27 @@ public:
     ~MainWindow();
 
 private slots:
-    void updateChainStatus();
-    void onMineButtonClicked();
+    void updateStatus();
+    void showNotification(const QString &title, const QString &message);
+    void onBlockMined(const QString &blockHash);
+    void onTransactionProcessed(const QString &txId);
+    void onPeerConnected(const QString &peer);
+    void onPeerDisconnected(const QString &peer);
 
 private:
-    Ui::MainWindow *ui;
+    void setupUi();
+    void setupMenu();
+    void setupTrayIcon();
+    void connectSignals();
+
     Blockchain blockchain;
-    QTimer *updateTimer;
+    QTabWidget *tabWidget;
+    WalletWidget *walletWidget;
+    NetworkWidget *networkWidget;
+    MiningWidget *miningWidget;
+    TransactionWidget *transactionWidget;
+    QStatusBar *statusBar;
+    QSystemTrayIcon *trayIcon;
 };
+
 #endif // MAINWINDOW_H
