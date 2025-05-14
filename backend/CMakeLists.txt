@@ -5,12 +5,6 @@ project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 if(WIN32)
     set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
     set(CMAKE_SUPPRESS_REGENERATION_MESSAGE TRUE)
-    
-    # Usa PowerShell tradicional se pwsh não estiver disponível
-    find_program(PWSH_PATH pwsh.exe)
-    if(NOT PWSH_PATH)
-        set(CMAKE_MAKE_PROGRAM "powershell.exe")
-    endif()
 endif()
 
 # Configurações básicas
@@ -22,167 +16,95 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC_MOC_OPTIONS "--no-warnings")  # Suprime avisos de MOC vazio
 
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
-# Configuração para OpenSSL (necessário para ECDSA)
+# Configuração para OpenSSL
 find_package(OpenSSL REQUIRED)
 if(OPENSSL_FOUND)
     message(STATUS "OpenSSL encontrado:")
     message(STATUS "  - Versão: ${OPENSSL_VERSION}")
-    message(STATUS "  - Bibliotecas: ${OPENSSL_LIBRARIES}")
-    message(STATUS "  - Includes: ${OPENSSL_INCLUDE_DIR}")
 else()
     message(FATAL_ERROR "OpenSSL não encontrado - Necessário para criptografia ECDSA")
 endif()
 
-# Configuração para ignorar Vulkan se não for necessário
-set(Vulkan_FOUND FALSE)
-
-# Configuração robusta para nlohmann/json
-set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/nlohmann")
-set(JSON_HEADER "${JSON_INCLUDE_DIR}/json.hpp")
-
-if(EXISTS "${JSON_HEADER}")
-    message(STATUS "Usando nlohmann/json local em: ${JSON_INCLUDE_DIR}")
-    
-    add_library(nlohmann_json INTERFACE)
-    target_include_directories(nlohmann_json INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
-else()
-    message(FATAL_ERROR "Arquivo json.hpp não encontrado em ${JSON_INCLUDE_DIR}")
+# Configuração para nlohmann/json
+find_package(nlohmann_json 3.9.1 REQUIRED)
+if(nlohmann_json_FOUND)
+    message(STATUS "nlohmann/json encontrado: v${nlohmann_json_VERSION}")
 endif()
 
-# Configuração do frontend web (opcional)
-option(ENABLE_WEB_INTERFACE "Habilitar interface web" OFF)
+# Definir estrutura de diretórios
+set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
-if(ENABLE_WEB_INTERFACE)
-    set(FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../frontend")  # Assume estrutura irmã
-    
-    if(EXISTS "${FRONTEND_DIR}/package.json")
-        find_program(NODE_EXE node
-            PATHS
-            "$ENV{ProgramFiles}/nodejs"
-            "$ENV{SystemDrive}/nodejs"
-            "$ENV{LOCALAPPDATA}/Microsoft/WindowsApps"
-            NO_CACHE
-        )
-        
-        if(NODE_EXE)
-            message(STATUS "Node.js encontrado: ${NODE_EXE}")
-            add_custom_target(
-                build_frontend
-                COMMAND npm install
-                COMMAND npm run build
-                WORKING_DIRECTORY ${FRONTEND_DIR}
-                COMMENT "Building frontend..."
-            )
-        else()
-            message(WARNING "Node.js não encontrado - Interface web desabilitada")
-            set(ENABLE_WEB_INTERFACE OFF)
-        endif()
-    else()
-        message(WARNING "package.json não encontrado em ${FRONTEND_DIR} - Interface web desabilitada")
-        set(ENABLE_WEB_INTERFACE OFF)
-    endif()
-endif()
-
-# Lista de arquivos fonte principais
-set(SOURCE_FILES
-    src/main.cpp
-    src/blockchain/blockchain.cpp
-    src/blockchain/block.cpp
-    src/blockchain/transaction.cpp
-    src/blockchain/walletwidget.cpp
-    src/blockchain/miningwidget.cpp
-    src/blockchain/networkwidget.cpp
-    src/blockchain/transactionwidget.cpp
-    src/gui/mainwindow.cpp
-)
-
-# Arquivos de criptografia
-set(CRYPTO_SOURCES
-    src/crypto/sha256.cpp
-    src/crypto/ecdsa.cpp
-    src/crypto/base58.cpp
-    src/crypto/ripemd160.cpp
-)
-
-# Arquivos de rede P2P
-set(NETWORK_SOURCES
-    src/network/p2p.cpp
-    src/network/message.cpp
-    src/network/peer.cpp
-    src/network/discovery.cpp
+# Lista de arquivos fonte
+file(GLOB_RECURSE SOURCE_FILES 
+    "${SOURCE_DIR}/*.cpp"
+    "${SOURCE_DIR}/*.cc"
 )
 
 # Lista de cabeçalhos
-set(HEADER_FILES
-    src/blockchain/blockchain.h
-    src/blockchain/block.h
-    src/blockchain/transaction.h
-    src/blockchain/walletwidget.h
-    src/blockchain/miningwidget.h
-    src/blockchain/networkwidget.h
-    src/blockchain/transactionwidget.h
-    src/crypto/sha256.h
-    src/crypto/ecdsa.h
-    src/crypto/base58.h
-    src/crypto/ripemd160.h
-    src/network/p2p.h
-    src/network/message.h
-    src/network/peer.h
-    src/network/discovery.h
-    src/gui/mainwindow.h
+file(GLOB_RECURSE HEADER_FILES 
+    "${SOURCE_DIR}/*.h"
+    "${SOURCE_DIR}/*.hpp"
 )
 
 # Arquivos de recursos
-set(RESOURCES
-    resources/resources.qrc
+file(GLOB RESOURCE_FILES
+    "${RESOURCE_DIR}/*.qrc"
+    "${RESOURCE_DIR}/*.rc"
 )
 
-# Lista de arquivos UI
-set(UI_FILES
-    src/gui/mainwindow.ui
+# Arquivos UI
+file(GLOB UI_FILES
+    "${SOURCE_DIR}/gui/*.ui"
 )
 
 # Cria o executável principal
 add_executable(rhodium_node 
-    ${SOURCE_FILES} 
-    ${HEADER_FILES} 
-    ${CRYPTO_SOURCES} 
-    ${NETWORK_SOURCES} 
-    ${RESOURCES}
+    ${SOURCE_FILES}
+    ${HEADER_FILES}
+    ${RESOURCE_FILES}
 )
+
+# Configuração de includes
+target_include_directories(rhodium_node PRIVATE
+    ${SOURCE_DIR}
+    ${INCLUDE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
+)
+
+# Configurações de compilação
+if(MSVC)
+    target_compile_options(rhodium_node PRIVATE 
+        /W4
+        /WX
+        /permissive-
+    )
+    target_compile_definitions(rhodium_node PRIVATE
+        _CRT_SECURE_NO_WARNINGS
+    )
+else()
+    target_compile_options(rhodium_node PRIVATE 
+        -Wall
+        -Wextra
+        -Werror
+    )
+endif()
 
 # Processa arquivos UI e MOC
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
 qt6_wrap_cpp(MOC_SOURCES ${HEADER_FILES})
 target_sources(rhodium_node PRIVATE ${UI_HEADERS} ${MOC_SOURCES})
 
-# Configuração de includes
-target_include_directories(rhodium_node PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_BINARY_DIR}"
-    ${OPENSSL_INCLUDE_DIR}
-)
-
-# Configurações de compilação específicas
-if(MSVC)
-    target_compile_options(rhodium_node PRIVATE /W4 /WX)
-else()
-    target_compile_options(rhodium_node PRIVATE -Wall -Wextra -Werror)
-endif()
-
 # Linkagem de bibliotecas
 target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
-    Qt6::Gui
     Qt6::Widgets
     Qt6::Network
     OpenSSL::Crypto
@@ -194,33 +116,22 @@ target_link_libraries(rhodium_node PRIVATE
 if(WIN32)
     set_target_properties(rhodium_node PROPERTIES
         WIN32_EXECUTABLE TRUE
-        LINK_FLAGS "/ENTRY:mainCRTStartup"
     )
     
-    # Copia DLLs do OpenSSL
+    # Copia DLLs necessárias
     add_custom_command(TARGET rhodium_node POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:rhodium_node>/platforms"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${QT_PATH}/plugins/platforms/qwindows.dll"
+            "$<TARGET_FILE_DIR:rhodium_node>/platforms/"
         COMMAND ${CMAKE_COMMAND} -E copy
             "${OPENSSL_CRYPTO_LIBRARY}"
-            "${CMAKE_CURRENT_BINARY_DIR}/Release/"
+            "$<TARGET_FILE_DIR:rhodium_node>/"
         COMMAND ${CMAKE_COMMAND} -E copy
             "${OPENSSL_SSL_LIBRARY}"
-            "${CMAKE_CURRENT_BINARY_DIR}/Release/"
-        COMMENT "Copiando bibliotecas OpenSSL..."
+            "$<TARGET_FILE_DIR:rhodium_node>/"
+        COMMENT "Copiando dependências..."
     )
-endif()
-
-# Copia os plugins Qt necessários após o build
-add_custom_command(TARGET rhodium_node POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms"
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${QT_PATH}/plugins/platforms/qwindows.dll"
-        "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms/"
-    COMMENT "Copiando plugins Qt..."
-)
-
-# Adiciona dependência do frontend se estiver habilitado
-if(ENABLE_WEB_INTERFACE AND TARGET build_frontend)
-    add_dependencies(rhodium_node build_frontend)
 endif()
 
 # Configurações de instalação
@@ -229,15 +140,13 @@ install(TARGETS rhodium_node
     BUNDLE DESTINATION .
 )
 
-install(DIRECTORY resources/
+install(DIRECTORY ${RESOURCE_DIR}/
     DESTINATION resources
-    PATTERN "*.qrc" EXCLUDE
 )
 
 message(STATUS "\nConfiguração concluída com sucesso!")
 message(STATUS "  - Versão: ${RhodiumBlockchain_VERSION}")
-message(STATUS "  - Interface web: ${ENABLE_WEB_INTERFACE}")
 message(STATUS "  - Qt versão: ${Qt6_VERSION}")
 message(STATUS "  - OpenSSL versão: ${OPENSSL_VERSION}")
-message(STATUS "  - Componentes de rede habilitados")
-message(STATUS "  - Suporte a ECDSA habilitado")
+message(STATUS "  - Diretório fonte: ${SOURCE_DIR}")
+message(STATUS "  - Número de arquivos fonte: ${SOURCE_FILES}")
