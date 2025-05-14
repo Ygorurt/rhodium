@@ -3,6 +3,7 @@
 
 #include <QByteArray>
 #include <QDateTime>
+#include <QList>
 #include "network/peer.h"
 
 class Message {
@@ -17,6 +18,8 @@ public:
         HANDSHAKE = 0x07
     };
 
+    static const int MAX_MESSAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
     Message(Type type, const QByteArray& payload);
     Message(const QByteArray& rawData);
 
@@ -26,7 +29,7 @@ public:
     QByteArray rawData() const;
     QDateTime timestamp() const;
 
-    // Cria mensagens específicas
+    // Factory methods
     static Message createHandshake(const PeerInfo& peerInfo);
     static Message createTransaction(const QByteArray& txData);
     static Message createBlock(const QByteArray& blockData);
@@ -43,6 +46,9 @@ private:
 
     QByteArray serialize() const;
     void deserialize(const QByteArray& data);
+
+    friend QDataStream& operator<<(QDataStream&, const PeerInfo&);
+    friend QDataStream& operator>>(QDataStream&, PeerInfo&);
 };
 
 #endif // MESSAGE_H
