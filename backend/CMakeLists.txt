@@ -5,6 +5,12 @@ project(RhodiumBlockchain VERSION 1.0 LANGUAGES CXX)
 if(WIN32)
     set(CMAKE_EXECUTE_PROCESS_COMMAND_ECHO STDOUT)
     set(CMAKE_SUPPRESS_REGENERATION_MESSAGE TRUE)
+    
+    # Usa PowerShell tradicional se pwsh não estiver disponível
+    find_program(PWSH_PATH pwsh.exe)
+    if(NOT PWSH_PATH)
+        set(CMAKE_MAKE_PROGRAM "powershell.exe")
+    endif()
 endif()
 
 # Configurações básicas
@@ -16,46 +22,60 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC_MOC_OPTIONS "--no-warnings")  # Suprime avisos de MOC vazio
 
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# Configuração robusta para nlohmann_json
+# Configuração para ignorar Vulkan se não for necessário
+set(Vulkan_FOUND FALSE)
+
+# Configuração robusta para nlohmann/json
 set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/nlohmann")
 set(JSON_HEADER "${JSON_INCLUDE_DIR}/json.hpp")
 
 if(EXISTS "${JSON_HEADER}")
     message(STATUS "Usando nlohmann/json local em: ${JSON_INCLUDE_DIR}")
     
-    # Cria um alvo de interface manualmente
     add_library(nlohmann_json INTERFACE)
-    target_include_directories(nlohmann_json INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/backend/include")
-    
-    # Cria o alias no namespace
+    target_include_directories(nlohmann_json INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
     add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 else()
     message(FATAL_ERROR "Arquivo json.hpp não encontrado em ${JSON_INCLUDE_DIR}")
 endif()
 
 # Configuração do frontend web (opcional)
-option(ENABLE_WEB_INTERFACE "Habilitar interface web" ON)
+option(ENABLE_WEB_INTERFACE "Habilitar interface web" OFF)
 
 if(ENABLE_WEB_INTERFACE)
-    # Busca Node.js em locais comuns
-    find_program(NODE_EXE node
-        PATHS
-        "$ENV{ProgramFiles}/nodejs"
-        "$ENV{SystemDrive}/nodejs"
-        "$ENV{LOCALAPPDATA}/Microsoft/WindowsApps"
-    )
+    set(FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../frontend")  # Assume estrutura irmã
     
-    if(NODE_EXE)
-        message(STATUS "Node.js encontrado: ${NODE_EXE}")
-        # Adicione aqui os comandos para build do frontend
+    if(EXISTS "${FRONTEND_DIR}/package.json")
+        find_program(NODE_EXE node
+            PATHS
+            "$ENV{ProgramFiles}/nodejs"
+            "$ENV{SystemDrive}/nodejs"
+            "$ENV{LOCALAPPDATA}/Microsoft/WindowsApps"
+            NO_CACHE
+        )
+        
+        if(NODE_EXE)
+            message(STATUS "Node.js encontrado: ${NODE_EXE}")
+            add_custom_target(
+                build_frontend
+                COMMAND npm install
+                COMMAND npm run build
+                WORKING_DIRECTORY ${FRONTEND_DIR}
+                COMMENT "Building frontend..."
+            )
+        else()
+            message(WARNING "Node.js não encontrado - Interface web desabilitada")
+            set(ENABLE_WEB_INTERFACE OFF)
+        endif()
     else()
-        message(STATUS "Node.js não encontrado - Interface web desabilitada")
+        message(WARNING "package.json não encontrado em ${FRONTEND_DIR} - Interface web desabilitada")
         set(ENABLE_WEB_INTERFACE OFF)
     endif()
 endif()
@@ -68,24 +88,6 @@ set(SOURCE_FILES
     src/blockchain/transaction.cpp
     src/gui/mainwindow.cpp
 )
-
-# Configuração corrigida para o frontend
-set(FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/frontend")
-
-if(EXISTS "${FRONTEND_DIR}/package.json")
-    message(STATUS "Frontend encontrado em: ${FRONTEND_DIR}")
-    
-    # Comandos para build do frontend
-    add_custom_command(
-        TARGET rhodium_node POST_BUILD
-        COMMAND npm install
-        COMMAND npm run build
-        WORKING_DIRECTORY ${FRONTEND_DIR}
-        COMMENT "Building frontend..."
-    )
-else()
-    message(WARNING "Frontend não encontrado em ${FRONTEND_DIR}")
-endif()
 
 # Lista de cabeçalhos
 set(HEADER_FILES
@@ -100,7 +102,7 @@ set(UI_FILES
     src/gui/mainwindow.ui
 )
 
-# Cria o executável
+# Cria o executável principal
 add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES})
 
 # Processa arquivos UI e MOC
@@ -115,29 +117,28 @@ target_include_directories(rhodium_node PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-# Verifica se o alvo existe antes de linkar
-if(TARGET nlohmann_json::nlohmann_json)
-    message(STATUS "Configurando linkagem com nlohmann_json::nlohmann_json")
-    target_link_libraries(rhodium_node PRIVATE
-        Qt6::Core
-        Qt6::Gui
-        Qt6::Widgets
-        nlohmann_json::nlohmann_json
-    )
-else()
-    message(FATAL_ERROR "Alvo nlohmann_json::nlohmann_json não encontrado para linkagem")
-endif()
+# Linkagem de bibliotecas
+target_link_libraries(rhodium_node PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    nlohmann_json::nlohmann_json
+)
 
 # Configuração para Windows
 if(WIN32)
     set_target_properties(rhodium_node PROPERTIES
         WIN32_EXECUTABLE TRUE
+        LINK_FLAGS "/ENTRY:mainCRTStartup"
     )
 endif()
 
-# Desativa a criação de atalhos se não for necessário
-set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY TRUE)
+# Adiciona dependência do frontend se estiver habilitado
+if(ENABLE_WEB_INTERFACE AND TARGET build_frontend)
+    add_dependencies(rhodium_node build_frontend)
+endif()
 
 message(STATUS "\nConfiguração concluída com sucesso!")
+message(STATUS "  - Versão: ${RhodiumBlockchain_VERSION}")
 message(STATUS "  - Interface web: ${ENABLE_WEB_INTERFACE}")
 message(STATUS "  - Qt versão: ${Qt6_VERSION}")
