@@ -46,15 +46,6 @@ else()
     message(FATAL_ERROR "Arquivo json.hpp não encontrado em ${JSON_INCLUDE_DIR}")
 endif()
 
-# Copia os plugins necessários após o build
-add_custom_command(TARGET rhodium_node POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms"
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${QT_PATH}/plugins/platforms/qwindows.dll"
-        "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms/"
-    COMMENT "Copiando plugins Qt..."
-)
-
 # Configuração do frontend web (opcional)
 option(ENABLE_WEB_INTERFACE "Habilitar interface web" OFF)
 
@@ -141,6 +132,15 @@ if(WIN32)
         LINK_FLAGS "/ENTRY:mainCRTStartup"
     )
 endif()
+
+# Copia os plugins necessários após o build
+add_custom_command(TARGET rhodium_node POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms"
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${QT_PATH}/plugins/platforms/qwindows.dll"
+        "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms/"
+    COMMENT "Copiando plugins Qt..."
+)
 
 # Adiciona dependência do frontend se estiver habilitado
 if(ENABLE_WEB_INTERFACE AND TARGET build_frontend)
