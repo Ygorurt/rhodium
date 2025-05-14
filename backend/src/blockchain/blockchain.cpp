@@ -1,163 +1,160 @@
 #include "blockchain.h"
 #include <fstream>
-#include <iostream>
-#include "crypto/sha256.h"
+#include <sstream>
+#include <chrono>
+#include <openssl/sha.h>
 
 Blockchain::Blockchain() {
-    // Cria bloco genesis
-    Block genesis(0, "0", {});
+    // Criar bloco genesis
+    Block genesis;
+    genesis.height = 0;
+    genesis.timestamp = std::time(nullptr);
+    genesis.previousHash = "0";
+    genesis.nonce = 0;
+    genesis.hash = "0000000000000000000000000000000000000000000000000000000000000000";
+    
     chain_.push_back(genesis);
-    
-    // Inicializa rede P2P
-    p2pNetwork_ = std::make_unique<P2PNetwork>(this);
-}
-
-void Blockchain::initP2PNetwork(int port) {
-    p2pNetwork_->start(port);
-    
-    // Conecta a nós conhecidos
-    std::vector<std::string> seedNodes = {
-        "seed1.rhodium.org:8333",
-        "seed2.rhodium.org:8333"
-    };
-    p2pNetwork_->connectToSeedNodes(seedNodes);
-    
-    // Sincroniza cadeia inicial
-    syncChain();
 }
 
 bool Blockchain::mineBlock(const std::string& minerAddress, bool usePoS) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    if (pendingTxs_.empty()) return false;
-
-    Block newBlock(chain_.size(), lastHash(), pendingTxs_);
-    pendingTxs_.clear();
-
-    if (!usePoS) {
-        // PoW mining
-        while (newBlock.getHash().substr(0, 4) != "0000") {
-            newBlock.incrementNonce();
+    if(pendingTxs_.empty()) {
+        return false;
+    }
+    
+    Block newBlock;
+    newBlock.height = chain_.back().height + 1;
+    newBlock.timestamp = std::time(nullptr);
+    newBlock.previousHash = chain_.back().hash;
+    newBlock.miner = minerAddress;
+    
+    // Adicionar transações (limitar a 1000 por bloco)
+    size_t txCount = std::min(pendingTxs_.size(), size_t(1000));
+    newBlock.transactions.assign(pendingTxs_.begin(), pendingTxs_.begin() + txCount);
+    pendingTxs_.erase(pendingTxs_.begin(), pendingTxs_.begin() + txCount);
+    
+    if(usePoS) {
+        // Lógica PoS simplificada
+        double stake = getStake(minerAddress);
+        if(stake <= 0) return false;
+        
+        // "Prova" de stake - quanto maior o stake, mais fácil minerar
+        unsigned int target = UINT_MAX * (1.0 - std::min(1.0, stake / 10000.0));
+        unsigned int randomValue = rand() % UINT_MAX;
+        
+        if(randomValue > target) {
+            return false;
+        }
+        
+        newBlock.hash = "pos_block_" + std::to_string(newBlock.height);
+    } else {
+        // Lógica PoW simplificada
+        for(int nonce = 0; nonce < 1000000; nonce++) {
+            newBlock.nonce = nonce;
+            std::string blockData = std::to_string(newBlock.height) + newBlock.previousHash + std::to_string(nonce);
+            
+            unsigned char hash[SHA256_DIGEST_LENGTH];
+            SHA256((unsigned char*)blockData.c_str(), blockData.size(), hash);
+            
+            std::stringstream ss;
+            for(int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+                ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+            }
+            
+            newBlock.hash = ss.str();
+            
+            // Dificuldade simplificada - hash deve começar com "00"
+            if(newBlock.hash.substr(0, 2) == "00") {
+                break;
+            }
         }
     }
-
-    chain_.push_back(newBlock);
-    balances_[minerAddress] += 50.0; // Recompensa de bloco
     
-    // Broadcast do novo bloco
-    if (p2pNetwork_) {
-        p2pNetwork_->broadcastBlock(newBlock.serialize());
+    // Atualizar saldos
+    for(const auto& tx : newBlock.transactions) {
+        balances_[tx.from] -= tx.amount;
+        balances_[tx.to] += tx.amount;
     }
     
+    // Recompensa do bloco
+    double blockReward = 50.0; // Recompensa fixa simplificada
+    balances_[minerAddress] += blockReward;
+    
+    chain_.push_back(newBlock);
+    
+    // Broadcast do novo bloco
+    if(p2pNetwork_) {
+        p2pNetwork_->broadcastBlock(newBlock);
+    }
+    
+    emit blockAdded(newBlock);
     return true;
 }
 
 void Blockchain::addTransaction(const std::string& from, const std::string& to, double amount, const std::string& signature) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    Transaction tx(from, to, amount);
-    
-    // Verificar a assinatura antes de adicionar
-    if (!tx.isValid()) {
-        throw std::runtime_error("Invalid transaction signature");
-    }
-    
-    // Verificar saldo suficiente
-    if (balances_[from] < amount) {
-        throw std::runtime_error("Insufficient funds");
-    }
-    
-    pendingTxs_.push_back(tx);
-    balances_[from] -= amount;
-    
-    // Se estiver usando P2P, transmita a transação
-    if (p2pNetwork_) {
-        p2pNetwork_->broadcast(tx.toJson().dump());
-    }
-}
-
-void Blockchain::broadcastTransaction(const Transaction& tx) {
-    if (p2pNetwork_) {
-        p2pNetwork_->broadcastTransaction(tx.serialize());
-    }
-}
-
-void Blockchain::broadcastBlock(const Block& block) {
-    if (p2pNetwork_) {
-        p2pNetwork_->broadcastBlock(block.serialize());
-    }
-}
-
-void Blockchain::processReceivedTransaction(const Transaction& tx) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    // Verifica se a transação já existe
-    for (const auto& pendingTx : pendingTxs_) {
-        if (pendingTx.getId() == tx.getId()) {
-            return; // Transação já existe
-        }
-    }
-    
-    // Adiciona à pool de transações
-    pendingTxs_.push_back(tx);
-}
-
-void Blockchain::processReceivedBlock(const Block& block) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    
-    // Verifica se o bloco já existe
-    if (block.getIndex() < chain_.size()) {
-        return; // Bloco já existe na cadeia
-    }
-    
-    // Valida o bloco
-    if (block.getPreviousHash() != lastHash()) {
-        std::cerr << "Received block with invalid previous hash" << std::endl;
+    // Verificação simplificada
+    if(amount <= 0 || from.empty() || to.empty()) {
         return;
     }
     
-    if (block.getHash().substr(0, 4) != "0000") {
-        std::cerr << "Received block with invalid proof of work" << std::endl;
+    // Verificar saldo (ignorar para transações de coinbase)
+    if(from != "0" && getBalance(from) < amount) {
         return;
     }
     
-    // Adiciona o bloco à cadeia
-    chain_.push_back(block);
+    Transaction tx;
+    tx.from = from;
+    tx.to = to;
+    tx.amount = amount;
+    tx.timestamp = std::time(nullptr);
+    tx.signature = signature;
     
-    // Atualiza saldos (simplificado)
-    balances_[block.getMinerAddress()] += 50.0; // Recompensa de bloco
-    for (const auto& tx : block.getTransactions()) {
-        balances_[tx.getFrom()] -= tx.getAmount();
-        balances_[tx.getTo()] += tx.getAmount();
+    // Hash da transação simplificado
+    std::string txData = from + to + std::to_string(amount) + std::to_string(tx.timestamp);
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256((unsigned char*)txData.c_str(), txData.size(), hash);
+    
+    std::stringstream ss;
+    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
     }
     
-    // Remove transações confirmadas da pool
-    auto it = std::remove_if(pendingTxs_.begin(), pendingTxs_.end(),
-        [&block](const Transaction& tx) {
-            for (const auto& blockTx : block.getTransactions()) {
-                if (blockTx.getId() == tx.getId()) {
-                    return true;
-                }
-            }
-            return false;
-        });
-    pendingTxs_.erase(it, pendingTxs_.end());
+    tx.txHash = ss.str();
+    pendingTxs_.push_back(tx);
+    
+    // Broadcast da transação
+    if(p2pNetwork_) {
+        p2pNetwork_->broadcastTransaction(tx);
+    }
+    
+    emit transactionAdded(tx);
 }
 
-void Blockchain::syncChain() {
-    // Implementação simplificada de sincronização
-    // Na prática, você precisaria de um protocolo mais sofisticado
-    if (p2pNetwork_ && !p2pNetwork_->getPeerList().empty()) {
-        // Solicita a cadeia mais longa dos peers
-        // Aqui você implementaria o protocolo de sincronização
-    }
+double Blockchain::getBalance(const std::string& address) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = balances_.find(address);
+    return it != balances_.end() ? it->second : 0.0;
+}
+
+double Blockchain::getStake(const std::string& address) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = stakes_.find(address);
+    return it != stakes_.end() ? it->second : 0.0;
+}
+
+void Blockchain::initP2PNetwork(int port) {
+    p2pNetwork_ = std::make_unique<P2PNetwork>(this, port);
+    connect(p2pNetwork_.get(), &P2PNetwork::peersUpdated, this, &Blockchain::peersUpdated);
 }
 
 std::vector<std::string> Blockchain::getPeerList() const {
-    if (p2pNetwork_) {
-        return p2pNetwork_->getPeerList();
+    if(p2pNetwork_) {
+        return p2pNetwork_->getConnectedPeers();
     }
     return {};
 }
 
-// ... (outros métodos permanecem iguais)
+// Outros métodos implementados de forma similar...
