@@ -95,6 +95,11 @@ set(SOURCE_FILES
     src/gui/mainwindow.cpp
 )
 
+set(CRYPTO_SOURCES
+    src/crypto/sha256.cpp
+    src/crypto/ecdsa.cpp
+)
+
 # Lista de cabeçalhos
 set(HEADER_FILES
     src/blockchain/blockchain.h
@@ -109,7 +114,7 @@ set(UI_FILES
 )
 
 # Cria o executável principal
-add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES} ${NETWORK_SOURCES})
+add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES} ${CRYPTO_SOURCES} ${NETWORK_SOURCES})
 
 # Processa arquivos UI e MOC
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
