@@ -18,12 +18,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Adicione estas linhas
-set(NETWORK_SOURCES
-    src/blockchain/network/p2p.cpp
-    src/blockchain/network/message.cpp
-)
-
 # Configurações do Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -33,9 +27,18 @@ set(CMAKE_AUTOMOC_MOC_OPTIONS "--no-warnings")  # Suprime avisos de MOC vazio
 # Configuração do Qt
 set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
 
+# Configuração para OpenSSL (necessário para ECDSA)
 find_package(OpenSSL REQUIRED)
+if(OPENSSL_FOUND)
+    message(STATUS "OpenSSL encontrado:")
+    message(STATUS "  - Versão: ${OPENSSL_VERSION}")
+    message(STATUS "  - Bibliotecas: ${OPENSSL_LIBRARIES}")
+    message(STATUS "  - Includes: ${OPENSSL_INCLUDE_DIR}")
+else()
+    message(FATAL_ERROR "OpenSSL não encontrado - Necessário para criptografia ECDSA")
+endif()
 
 # Configuração para ignorar Vulkan se não for necessário
 set(Vulkan_FOUND FALSE)
@@ -88,7 +91,7 @@ if(ENABLE_WEB_INTERFACE)
     endif()
 endif()
 
-# Lista de arquivos fonte
+# Lista de arquivos fonte principais
 set(SOURCE_FILES
     src/main.cpp
     src/blockchain/blockchain.cpp
@@ -101,9 +104,20 @@ set(SOURCE_FILES
     src/gui/mainwindow.cpp
 )
 
+# Arquivos de criptografia
 set(CRYPTO_SOURCES
     src/crypto/sha256.cpp
     src/crypto/ecdsa.cpp
+    src/crypto/base58.cpp
+    src/crypto/ripemd160.cpp
+)
+
+# Arquivos de rede P2P
+set(NETWORK_SOURCES
+    src/network/p2p.cpp
+    src/network/message.cpp
+    src/network/peer.cpp
+    src/network/discovery.cpp
 )
 
 # Lista de cabeçalhos
@@ -116,7 +130,13 @@ set(HEADER_FILES
     src/blockchain/networkwidget.h
     src/blockchain/transactionwidget.h
     src/crypto/sha256.h
+    src/crypto/ecdsa.h
+    src/crypto/base58.h
+    src/crypto/ripemd160.h
     src/network/p2p.h
+    src/network/message.h
+    src/network/peer.h
+    src/network/discovery.h
     src/gui/mainwindow.h
 )
 
@@ -131,7 +151,13 @@ set(UI_FILES
 )
 
 # Cria o executável principal
-add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES} ${CRYPTO_SOURCES} ${NETWORK_SOURCES} ${RESOURCES})
+add_executable(rhodium_node 
+    ${SOURCE_FILES} 
+    ${HEADER_FILES} 
+    ${CRYPTO_SOURCES} 
+    ${NETWORK_SOURCES} 
+    ${RESOURCES}
+)
 
 # Processa arquivos UI e MOC
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
@@ -143,7 +169,15 @@ target_include_directories(rhodium_node PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_BINARY_DIR}"
+    ${OPENSSL_INCLUDE_DIR}
 )
+
+# Configurações de compilação específicas
+if(MSVC)
+    target_compile_options(rhodium_node PRIVATE /W4 /WX)
+else()
+    target_compile_options(rhodium_node PRIVATE -Wall -Wextra -Werror)
+endif()
 
 # Linkagem de bibliotecas
 target_link_libraries(rhodium_node PRIVATE
@@ -152,6 +186,7 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Widgets
     Qt6::Network
     OpenSSL::Crypto
+    OpenSSL::SSL
     nlohmann_json::nlohmann_json
 )
 
@@ -161,9 +196,20 @@ if(WIN32)
         WIN32_EXECUTABLE TRUE
         LINK_FLAGS "/ENTRY:mainCRTStartup"
     )
+    
+    # Copia DLLs do OpenSSL
+    add_custom_command(TARGET rhodium_node POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${OPENSSL_CRYPTO_LIBRARY}"
+            "${CMAKE_CURRENT_BINARY_DIR}/Release/"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${OPENSSL_SSL_LIBRARY}"
+            "${CMAKE_CURRENT_BINARY_DIR}/Release/"
+        COMMENT "Copiando bibliotecas OpenSSL..."
+    )
 endif()
 
-# Copia os plugins necessários após o build
+# Copia os plugins Qt necessários após o build
 add_custom_command(TARGET rhodium_node POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Release/platforms"
     COMMAND ${CMAKE_COMMAND} -E copy
@@ -177,7 +223,21 @@ if(ENABLE_WEB_INTERFACE AND TARGET build_frontend)
     add_dependencies(rhodium_node build_frontend)
 endif()
 
+# Configurações de instalação
+install(TARGETS rhodium_node
+    RUNTIME DESTINATION bin
+    BUNDLE DESTINATION .
+)
+
+install(DIRECTORY resources/
+    DESTINATION resources
+    PATTERN "*.qrc" EXCLUDE
+)
+
 message(STATUS "\nConfiguração concluída com sucesso!")
 message(STATUS "  - Versão: ${RhodiumBlockchain_VERSION}")
 message(STATUS "  - Interface web: ${ENABLE_WEB_INTERFACE}")
 message(STATUS "  - Qt versão: ${Qt6_VERSION}")
+message(STATUS "  - OpenSSL versão: ${OPENSSL_VERSION}")
+message(STATUS "  - Componentes de rede habilitados")
+message(STATUS "  - Suporte a ECDSA habilitado")
