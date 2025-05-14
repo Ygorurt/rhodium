@@ -13,9 +13,9 @@ struct PeerInfo {
     QString version;
     qint64 lastSeen;
     int latency; // em ms
+    QString id;  // Identificador único
 
     bool isValid() const;
-    QString id() const;
     QString toString() const;
 };
 
@@ -24,6 +24,24 @@ class Peer : public QTcpSocket {
 
 public:
     explicit Peer(QObject* parent = nullptr);
-    Peer(const PeerInfo& info, QObject* parent = nullptr);
+    explicit Peer(const PeerInfo& info, QObject* parent = nullptr);
 
-    PeerInfo info()
+    PeerInfo info() const;
+    void setInfo(const PeerInfo& info);
+    bool isConnected() const;
+    void sendMessage(const Message& message);
+
+signals:
+    void messageReceived(const Message& message);
+    void disconnected(Peer* peer);
+
+private slots:
+    void onReadyRead();
+    void onDisconnected();
+
+private:
+    PeerInfo m_info;
+    QByteArray m_buffer;
+};
+
+#endif // PEER_H
