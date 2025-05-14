@@ -92,6 +92,10 @@ set(SOURCE_FILES
     src/blockchain/blockchain.cpp
     src/blockchain/block.cpp
     src/blockchain/transaction.cpp
+    src/blockchain/walletwidget.cpp
+    src/blockchain/miningwidget.cpp
+    src/blockchain/networkwidget.cpp
+    src/blockchain/transactionwidget.cpp
     src/gui/mainwindow.cpp
 )
 
@@ -105,7 +109,18 @@ set(HEADER_FILES
     src/blockchain/blockchain.h
     src/blockchain/block.h
     src/blockchain/transaction.h
+    src/blockchain/walletwidget.h
+    src/blockchain/miningwidget.h
+    src/blockchain/networkwidget.h
+    src/blockchain/transactionwidget.h
+    src/crypto/sha256.h
+    src/network/p2p.h
     src/gui/mainwindow.h
+)
+
+# Arquivos de recursos
+set(RESOURCES
+    resources/resources.qrc
 )
 
 # Lista de arquivos UI
@@ -114,7 +129,7 @@ set(UI_FILES
 )
 
 # Cria o executável principal
-add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES} ${CRYPTO_SOURCES} ${NETWORK_SOURCES})
+add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES} ${CRYPTO_SOURCES} ${NETWORK_SOURCES} ${RESOURCES})
 
 # Processa arquivos UI e MOC
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
