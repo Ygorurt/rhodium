@@ -52,18 +52,27 @@ bool Blockchain::mineBlock(const std::string& minerAddress, bool usePoS) {
     return true;
 }
 
-void Blockchain::addTransaction(const std::string& from, const std::string& to, double amount) {
+void Blockchain::addTransaction(const std::string& from, const std::string& to, double amount, const std::string& signature) {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (amount <= 0) {
-        throw std::runtime_error("Transaction amount must be positive");
-    }
     
     Transaction tx(from, to, amount);
-    pendingTxs_.emplace_back(tx);
     
-    // Broadcast da transação
+    // Verificar a assinatura antes de adicionar
+    if (!tx.isValid()) {
+        throw std::runtime_error("Invalid transaction signature");
+    }
+    
+    // Verificar saldo suficiente
+    if (balances_[from] < amount) {
+        throw std::runtime_error("Insufficient funds");
+    }
+    
+    pendingTxs_.push_back(tx);
+    balances_[from] -= amount;
+    
+    // Se estiver usando P2P, transmita a transação
     if (p2pNetwork_) {
-        p2pNetwork_->broadcastTransaction(tx.serialize());
+        p2pNetwork_->broadcast(tx.toJson().dump());
     }
 }
 
