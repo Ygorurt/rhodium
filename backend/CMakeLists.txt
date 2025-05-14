@@ -18,6 +18,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Adicione estas linhas
+set(NETWORK_SOURCES
+    src/blockchain/network/p2p.cpp
+    src/blockchain/network/message.cpp
+)
+
 # Configurações do Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -103,7 +109,7 @@ set(UI_FILES
 )
 
 # Cria o executável principal
-add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(rhodium_node ${SOURCE_FILES} ${HEADER_FILES} ${NETWORK_SOURCES})
 
 # Processa arquivos UI e MOC
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
@@ -122,6 +128,7 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Network
     nlohmann_json::nlohmann_json
 )
 
