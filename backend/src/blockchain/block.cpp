@@ -2,22 +2,26 @@
 #include <sstream>
 #include <iomanip>
 #include <openssl/sha.h>
+#include <sha256.h>
 
-Block::Block(int index, const std::string& previousHash, 
-             const std::vector<Transaction>& transactions)
-    : index_(index), previousHash_(previousHash), 
-      transactions_(transactions), nonce_(0) {
-    timestamp_ = std::time(nullptr);
+Block::Block(size_t index, const std::string& previousHash, 
+            const std::vector<Transaction>& transactions)
+    : index_(index), 
+      previousHash_(previousHash),
+      transactions_(transactions),
+      nonce_(0),
+      timestamp_(time(nullptr)) {
     hash_ = calculateHash();
 }
 
 std::string Block::calculateHash() const {
     std::stringstream ss;
-    ss << index_ << timestamp_ << previousHash_;
+    ss << index_ << previousHash_ << timestamp_ << nonce_;
     for (const auto& tx : transactions_) {
-        ss << tx.getFrom() << tx.getTo() << tx.getAmount();
+        ss << tx.serialize(); // Assumindo que Transaction tem serialize()
     }
-    ss << nonce_;
+    return sha256(ss.str());
+}
     
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
