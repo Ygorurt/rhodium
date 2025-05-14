@@ -35,6 +35,8 @@ set(QT_PATH "D:/Qt/6.9.0/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
+find_package(OpenSSL REQUIRED)
+
 # Configuração para ignorar Vulkan se não for necessário
 set(Vulkan_FOUND FALSE)
 
@@ -149,6 +151,7 @@ target_link_libraries(rhodium_node PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
+    OpenSSL::Crypto
     nlohmann_json::nlohmann_json
 )
 
